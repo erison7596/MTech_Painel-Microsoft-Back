@@ -1,0 +1,14 @@
+{
+  "name": "mtech_painel-microsoft-back",
+  "version": "1.0.0",
+  "description": "<img src=\"https://lh3.googleusercontent.com/hr_crs_themes/AGvgesTv2V6zKXpE1Td5jGGF2FMb-dMnTNEj2CsVJrvbX5kJogd-X6Nnlmn0djcWZbIUv7qe7vXDxsmKEMHki2Srl5z9U9Y4i6_4WkJEGN0yK7rbviXSZP88b98=s1280\" />",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
