@@ -4,7 +4,7 @@ const xlsx = require('xlsx');
 const valorController = require('./src/controllers/valorController');
 const db = require('./src/utils/database');
 const Valor = require('./src/models/valor');
-
+const router = express.Router();
 
 const app = express();
 const port = 3000;
@@ -50,6 +50,19 @@ app.get('/importar', (req, res) => {
     });
 });
 
+app.get('/deletar', async (req, res) => {
+  try {
+    // Apagar todos os registros da tabela 'valors'
+    await Valor.destroy({
+      truncate: true // Opção para apagar todos os registros
+    });
+
+    res.status(200).json({ message: 'Todos os dados foram apagados com sucesso.' });
+  } catch (error) {
+    console.error('Erro ao apagar os dados:', error);
+    res.status(500).json({ message: 'Ocorreu um erro ao apagar os dados.' });
+  }
+});
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);

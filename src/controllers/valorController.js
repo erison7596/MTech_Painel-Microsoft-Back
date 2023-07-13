@@ -2,6 +2,7 @@ const xlsx = require('xlsx');
 const moment = require('moment');
 const db = require('../utils/database');
 const Valor = require('../models/valor');
+const ExcelJS = require('exceljs');
 
 function getCellValue(column, row, worksheet) {
   const cellAddress = `${column}${row}`;
@@ -25,14 +26,14 @@ async function importData(worksheet) {
 
   for (let col = range.s.c; col <= range.e.c; col++) {
     const columnName = getCellValue(xlsx.utils.encode_col(col), range.s.r + 2, worksheet);
-    console.log('Nome da coluna:', columnName);
+    //console.log('Nome da coluna:', columnName);
 
     if (columnNames.hasOwnProperty(columnName)) {
       columnNames[columnName] = col;
     }
   }
 
-  console.log('Colunas encontradas:', columnNames);
+  //console.log('Colunas encontradas:', columnNames);
 
   // Verificar se todas as colunas foram encontradas
   const missingColumns = Object.keys(columnNames).filter((columnName) => columnNames[columnName] === -1);
@@ -48,32 +49,28 @@ async function importData(worksheet) {
     const nomeExibicao = getCellValue(xlsx.utils.encode_col(columnNames['Nome para exibição']), row, worksheet);
     const idLicenca = getCellValue(xlsx.utils.encode_col(columnNames['ID LICENÇA']), row, worksheet);
     const idCustoLicenca = getCellValue(xlsx.utils.encode_col(columnNames['ID CUSTO LICENÇA']), row, worksheet);
-    const dataHoraCriacaoValue = getCellValue(xlsx.utils.encode_col(columnNames['Data/hora de criação']), row, worksheet);
-    console.log('Data/hora de criação (antes da formatação):', dataHoraCriacaoValue);
+
+    // Obter o valor bruto da coluna J (Data/hora de criação)
+    const dataHoraCriacaoValue = worksheet[xlsx.utils.encode_cell({ c: columnNames['Data/hora de criação'], r: row -1 })]?.w;
+    //console.log('Data/hora de criação (antes da formatação):', dataHoraCriacaoValue);
 
     let dataHoraCriacao;
 
     if (dataHoraCriacaoValue !== undefined && dataHoraCriacaoValue !== 'Data/hora de criação') {
-      if (typeof dataHoraCriacaoValue === 'string') {
-        const dataHoraCriacaoFormatted = moment(dataHoraCriacaoValue, 'DD/MM/YYYY HH:mm').format('YYYY-MM-DD HH:mm:ss');
-        if (dataHoraCriacaoFormatted !== 'Invalid date') {
-          dataHoraCriacao = dataHoraCriacaoFormatted;
-        } else {
-          console.log('Formato de data/hora inválido:', dataHoraCriacaoValue);
-          continue;
-        }
-      } else if (typeof dataHoraCriacaoValue === 'number') {
-        dataHoraCriacao = moment('1900-01-01').add(dataHoraCriacaoValue, 'days').format('YYYY-MM-DD HH:mm:ss');
+      // Converter o valor para um objeto Moment.js e verificar se é válido
+      const momentDate = moment(dataHoraCriacaoValue, ['MM/DD/YY HH:mm', 'DD/MM/YY HH:mm']);
+      if (momentDate.isValid()) {
+        dataHoraCriacao = momentDate.format('YYYY-MM-DD HH:mm:ss');
       } else {
-        console.log('Tipo de valor inválido:', dataHoraCriacaoValue);
+        //console.log('Formato de data/hora inválido:', dataHoraCriacaoValue);
         continue;
       }
     } else {
-      console.log('Valor de data/hora inválido:', dataHoraCriacaoValue);
+     // console.log('Valor de data/hora inválido:', dataHoraCriacaoValue);
       continue;
     }
 
-    console.log('Data/hora de criação (após a formatação):', dataHoraCriacao);
+    //console.log('Data/hora de criação (após a formatação):', dataHoraCriacao);
 
     // Licenças (extraído do Office365)
     const licencas = getCellValue(xlsx.utils.encode_col(columnNames['Licenças (extraído do Office365)']), row, worksheet);
@@ -89,9 +86,13 @@ async function importData(worksheet) {
     });
   }
 
-  console.log('Dados importados com sucesso!');
+  //console.log('Dados importados com sucesso!');
   process.exit(0);
 }
+
+
+
+
 
 module.exports = {
   importData
