@@ -20,8 +20,28 @@ db.authenticate().then(() => {
   console.error('Erro ao conectar ao banco de dados:', error);
 }) // Rota para listar os dados
 
-app.get('/', (req, res) => {
-  console.log('Rota /');
+app.get('/',async (req, res) => {
+   try {
+    const mediaIdCustoLicenca = await Valor.findAll({
+      attributes: [[Valor.sequelize.fn('AVG', Valor.sequelize.col('idCustoLicenca')), 'mediaIdCustoLicenca']],
+    });
+
+    const quantidadeNomeExibicao = await Valor.count('nomeExibicao');
+    
+    const quantidadeLicencas = await Valor.count('licencas');
+
+    const resultado = {
+      mediaIdCustoLicenca: mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca,
+      quantidadeNomeExibicao,
+      quantidadeLicencas,
+      divisaoLicencasPorMedia:mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca/quantidadeLicencas,
+    };
+
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro ao obter os valores calculados:', error);
+    res.status(500).json({ error: 'Erro ao obter os valores calculados' });
+  }
 });
 
 app.get('/listar', async (req, res) => {

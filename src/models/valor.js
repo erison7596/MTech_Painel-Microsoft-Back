@@ -10,6 +10,10 @@ const Valor = db.define('valor', {
     type: Sequelize.STRING,
     allowNull: false
   },
+  slug: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
   nomeExibicao: {
     type: Sequelize.STRING,
     allowNull: false

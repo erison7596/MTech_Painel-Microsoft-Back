@@ -3,6 +3,7 @@ const moment = require('moment');
 const db = require('../utils/database');
 const Valor = require('../models/valor');
 const ExcelJS = require('exceljs');
+const slugify = require('slugify');
 
 function getCellValue(column, row, worksheet) {
   const cellAddress = `${column}${row}`;
@@ -46,6 +47,7 @@ async function importData(worksheet) {
   for (let row = range.s.r + 2; row <= range.e.r; row++) {
     const distribuidora = getCellValue(xlsx.utils.encode_col(columnNames['DISTRIBUIDORA']), row, worksheet);
     const idDistribuidora = getCellValue(xlsx.utils.encode_col(columnNames['ID DISTRIBUIDORA']), row, worksheet);
+    const slug = slugify(idDistribuidora, { lower: true, strict: true });
     const nomeExibicao = getCellValue(xlsx.utils.encode_col(columnNames['Nome para exibição']), row, worksheet);
     const idLicenca = getCellValue(xlsx.utils.encode_col(columnNames['ID LICENÇA']), row, worksheet);
     const idCustoLicenca = getCellValue(xlsx.utils.encode_col(columnNames['ID CUSTO LICENÇA']), row, worksheet);
@@ -78,6 +80,7 @@ async function importData(worksheet) {
     await Valor.create({
       distribuidora,
       idDistribuidora,
+      slug,
       nomeExibicao,
       idLicenca,
       idCustoLicenca,
