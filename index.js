@@ -5,10 +5,16 @@ const valorController = require('./src/controllers/valorController');
 const db = require('./src/utils/database');
 const Valor = require('./src/models/valor');
 const router = express.Router();
+const cors = require('cors');
 
 const app = express();
-const port = 3000;
-
+const port = 4000;
+const corsOptions = {
+  origin: 'http://localhost:3000', // ou a URL do seu front-end Next.js
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+};
 // Configuração para servir arquivos estáticos
 app.use(express.static(__dirname + '/src'));
 
@@ -20,12 +26,16 @@ db.authenticate().then(() => {
   console.error('Erro ao conectar ao banco de dados:', error);
 }) // Rota para listar os dados
 
+
+app.use(cors(corsOptions));
+
 app.get('/',async (req, res) => {
    try {
     const mediaIdCustoLicenca = await Valor.findAll({
       attributes: [[Valor.sequelize.fn('AVG', Valor.sequelize.col('idCustoLicenca')), 'mediaIdCustoLicenca']],
     });
-
+     //deixar a medica com duas casas decimais
+    mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca = mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca.toFixed(2);
     const quantidadeNomeExibicao = await Valor.count('nomeExibicao');
     
     const quantidadeLicencas = await Valor.count('licencas');
