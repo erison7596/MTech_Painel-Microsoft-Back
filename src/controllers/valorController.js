@@ -75,7 +75,23 @@ async function importData(worksheet) {
     //console.log('Data/hora de criação (após a formatação):', dataHoraCriacao);
 
     // Licenças (extraído do Office365)
+     // Licenças (extraído do Office365)
     const licencas = getCellValue(xlsx.utils.encode_col(columnNames['Licenças (extraído do Office365)']), row, worksheet);
+
+    // Separar as licenças em um array
+    const licencasArray = licencas.split('+').map(licenca => licenca.trim());
+
+    // Atualizar as colunas booleanas com base nas licenças do usuário
+    const userLicenses = {
+      exchangeOnlinePlan1: licencasArray.includes('Exchange Online (Plan 1)'),
+      office365E3: licencasArray.includes('Office 365 E3'),
+      powerBIFree: licencasArray.includes('Power BI (free)'),
+      enterpriseMobility: licencasArray.includes('Enterprise Mobility'),
+      securityE3: licencasArray.includes('Security E3'),
+      microsoftTeamsExploratory: licencasArray.includes('Microsoft Teams Exploratory'),
+      microsoftPowerAutomateFree: licencasArray.includes('Microsoft Power Automate Free')
+      // Atualize com mais colunas conforme a necessidade para outras licenças
+    };
 
     await Valor.create({
       distribuidora,
@@ -85,7 +101,7 @@ async function importData(worksheet) {
       idLicenca,
       idCustoLicenca,
       dataHoraCriacao,
-      licencas
+      ...userLicenses // Spread operator para adicionar as colunas de licenças ao objeto
     });
   }
 
