@@ -6,6 +6,9 @@ const db = require('./src/utils/database');
 const Valor = require('./src/models/valor');
 const router = express.Router();
 const cors = require('cors');
+const licencaController = require('./src/controllers/licencasController');
+const Licenca = require('./src/models/licencas');
+const bodyParser = require('body-parser');
 
 const app = express();
 const port = 4000;
@@ -15,6 +18,10 @@ const corsOptions = {
   preflightContinue: false,
   optionsSuccessStatus: 204,
 };
+
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 // Configuração para servir arquivos estáticos
 app.use(express.static(__dirname + '/src'));
 
@@ -93,6 +100,11 @@ app.get('/deletar', async (req, res) => {
     res.status(500).json({ message: 'Ocorreu um erro ao apagar os dados.' });
   }
 });
+// Rota para obter os valores de licença
+app.get('/valoreslicenca', licencaController.obterValoresLicencas);
+
+// Rota para criar um novo valor de licença
+app.post('/valoreslicenca', licencaController.criarValorLicenca);
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
