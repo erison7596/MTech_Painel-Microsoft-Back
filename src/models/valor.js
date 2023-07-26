@@ -22,6 +22,10 @@ const Valor = db.define('valor', {
     type: Sequelize.STRING,
     allowNull: false
   },
+  licencas: {
+    type: Sequelize.STRING,
+    allowNull: false
+  },
   dataHoraCriacao: {
     type: Sequelize.DATE,
     allowNull: false

@@ -75,7 +75,7 @@ app.get('/listar', async (req, res) => {
   
 // Rota para importar a planilha
 app.get('/importar', (req, res) => {
-  const filePath = path.join(__dirname, 'src', 'public', 'planilhas', 'meuarquivo.xlsx');
+  const filePath = path.join(__dirname, 'src', 'public', 'planilhas', 'meuarquivo2.xlsx');
   const workbook = xlsx.readFile(filePath);
   const worksheet = workbook.Sheets['ESPECÍFICO'];
   valorController.importData(worksheet)
@@ -110,14 +110,55 @@ app.post('/valoreslicenca', licencaController.criarValorLicenca);
 app.get('/distribuidoras', async (req, res) => {
   try {
     const distribuidoras = await Valor.findAll({
-      attributes: ['distribuidora', 'idDistribuidora', [Sequelize.fn('SUM', Sequelize.col('idCustoLicenca')), 'valorTotal']],
-      group: ['distribuidora', 'idDistribuidora'],
+      attributes: [
+        'distribuidora',
+        'idDistribuidora',
+        'slug', 
+        [Sequelize.fn('FORMAT', Sequelize.literal('SUM(idCustoLicenca)'), 2), 'valorTotal']
+      ],
+      group: ['distribuidora', 'idDistribuidora', 'slug'],
+      order: [['distribuidora', 'ASC']] // Ordenando por distribuidora de forma ascendente (ASC)
     });
 
     res.json(distribuidoras);
   } catch (error) {
     console.error('Erro ao buscar as distribuidoras:', error);
     res.status(500).json({ error: 'Erro ao buscar as distribuidoras' });
+  }
+});
+
+app.get('/distribuidora/:slug', async (req, res) => {
+  try {
+    const { slug } = req.params;
+
+    const mediaIdCustoLicenca = await Valor.findAll({
+      where: { slug: slug },
+      attributes: [
+        [Valor.sequelize.fn('AVG', Valor.sequelize.col('idCustoLicenca')), 'mediaIdCustoLicenca']
+      ],
+    });
+
+    // deixar a medica com duas casas decimais
+    mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca = mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca.toFixed(2);
+
+    const quantidadeNomeExibicao = await Valor.count({
+      where: { slug: slug },
+      distinct: 'nomeExibicao'
+    });
+
+    const quantidadeLicencas = await Valor.count({ where: { slug: slug }, distinct: 'licencas' });
+
+    const resultado = {
+      mediaIdCustoLicenca: mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca,
+      quantidadeNomeExibicao,
+      quantidadeLicencas,
+      divisaoLicencasPorMedia: mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca / quantidadeLicencas,
+    };
+
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro ao obter os valores calculados:', error);
+    res.status(500).json({ error: 'Erro ao obter os valores calculados' });
   }
 });
 

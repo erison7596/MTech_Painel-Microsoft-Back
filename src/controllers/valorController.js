@@ -29,14 +29,11 @@ async function importData(worksheet) {
 
   for (let col = range.s.c; col <= range.e.c; col++) {
     const columnName = getCellValue(xlsx.utils.encode_col(col), range.s.r + 2, worksheet);
-    //console.log('Nome da coluna:', columnName);
 
     if (columnNames.hasOwnProperty(columnName)) {
       columnNames[columnName] = col;
     }
   }
-
-  //console.log('Colunas encontradas:', columnNames);
 
   // Verificar se todas as colunas foram encontradas
   const missingColumns = Object.keys(columnNames).filter((columnName) => columnNames[columnName] === -1);
@@ -44,11 +41,26 @@ async function importData(worksheet) {
   if (missingColumns.length > 0) {
     throw new Error(`Colunas faltando: ${missingColumns.join(', ')}`);
   }
-
+let tamanho = 0;
   // Importar os dados apenas das colunas desejadas
   for (let row = range.s.r + 2; row <= range.e.r; row++) {
     const distribuidora = getCellValue(xlsx.utils.encode_col(columnNames['DISTRIBUIDORA']), row, worksheet);
     const idDistribuidora = getCellValue(xlsx.utils.encode_col(columnNames['ID DISTRIBUIDORA']), row, worksheet);
+
+    if (idDistribuidora === undefined) {
+     // console.log('Valor de ID DISTRIBUIDORA indefinido na linha', row);
+      tamanho++;
+      if(tamanho > 100){
+        break;
+      }
+      continue;
+    }
+
+    if (typeof idDistribuidora !== 'string') {
+     // console.log('Valor de ID DISTRIBUIDORA inválido na linha', row);
+      continue;
+    }
+
     const slug = slugify(idDistribuidora, { lower: true, strict: true });
     const nomeExibicao = getCellValue(xlsx.utils.encode_col(columnNames['Nome para exibição']), row, worksheet);
     const idLicenca = getCellValue(xlsx.utils.encode_col(columnNames['ID LICENÇA']), row, worksheet);
@@ -56,7 +68,6 @@ async function importData(worksheet) {
 
     // Obter o valor bruto da coluna J (Data/hora de criação)
     const dataHoraCriacaoValue = worksheet[xlsx.utils.encode_cell({ c: columnNames['Data/hora de criação'], r: row -1 })]?.w;
-    //console.log('Data/hora de criação (antes da formatação):', dataHoraCriacaoValue);
 
     let dataHoraCriacao;
 
@@ -66,18 +77,15 @@ async function importData(worksheet) {
       if (momentDate.isValid()) {
         dataHoraCriacao = momentDate.format('YYYY-MM-DD HH:mm:ss');
       } else {
-        //console.log('Formato de data/hora inválido:', dataHoraCriacaoValue);
+       // console.log('Formato de data/hora inválido:', dataHoraCriacaoValue);
         continue;
       }
     } else {
-     // console.log('Valor de data/hora inválido:', dataHoraCriacaoValue);
+     //console.log('Valor de data/hora inválido:', dataHoraCriacaoValue);
       continue;
     }
 
-    //console.log('Data/hora de criação (após a formatação):', dataHoraCriacao);
-
     // Licenças (extraído do Office365)
-     // Licenças (extraído do Office365)
     const licencas = getCellValue(xlsx.utils.encode_col(columnNames['Licenças (extraído do Office365)']), row, worksheet);
 
     // Separar as licenças em um array
@@ -95,25 +103,47 @@ async function importData(worksheet) {
       // Atualize com mais colunas conforme a necessidade para outras licenças
     };
 
-    await Valor.create({
-      distribuidora,
-      idDistribuidora,
-      slug,
-      nomeExibicao,
-      idLicenca,
-      idCustoLicenca,
-      dataHoraCriacao,
-      ...userLicenses // Spread operator para adicionar as colunas de licenças ao objeto
+    const existingValor = await Valor.findOne({
+      where: {
+        nomeExibicao,
+        distribuidora,
+        idDistribuidora
+      }
     });
+
+    if (existingValor) {
+      // Se já existe um registro com os mesmos valores, atualize-o
+      existingValor.idLicenca = idLicenca;
+      existingValor.idCustoLicenca = idCustoLicenca;
+      existingValor.dataHoraCriacao = dataHoraCriacao;
+      existingValor.licencas = licencas;
+      existingValor.exchangeOnlinePlan1 = userLicenses.exchangeOnlinePlan1;
+      existingValor.office365E3 = userLicenses.office365E3;
+      existingValor.powerBIFree = userLicenses.powerBIFree;
+      existingValor.enterpriseMobility = userLicenses.enterpriseMobility;
+      existingValor.securityE3 = userLicenses.securityE3;
+      existingValor.microsoftTeamsExploratory = userLicenses.microsoftTeamsExploratory;
+      existingValor.microsoftPowerAutomateFree = userLicenses.microsoftPowerAutomateFree;
+
+      await existingValor.save();
+    } else {
+      // Caso contrário, crie um novo registro
+      await Valor.create({
+        distribuidora,
+        idDistribuidora,
+        slug,
+        nomeExibicao,
+        idLicenca,
+        idCustoLicenca,
+        licencas,
+        dataHoraCriacao,
+        ...userLicenses
+      });
+    }
   }
 
-  //console.log('Dados importados com sucesso!');
-  process.exit(0);
+  console.log('Dados importados com sucesso!');
 }
-
-
-
-
 
 module.exports = {
   importData
