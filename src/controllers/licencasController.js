@@ -45,6 +45,7 @@ async function obterValoresLicencas(req, res) {
   }
 }
 
+
 module.exports = {
   criarValorLicenca,
   obterValoresLicencas
