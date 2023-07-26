@@ -9,6 +9,7 @@ const cors = require('cors');
 const licencaController = require('./src/controllers/licencasController');
 const Licenca = require('./src/models/licencas');
 const bodyParser = require('body-parser');
+const Sequelize = require('sequelize');
 
 const app = express();
 const port = 4000;
@@ -105,6 +106,21 @@ app.get('/valoreslicenca', licencaController.obterValoresLicencas);
 
 // Rota para criar um novo valor de licença
 app.post('/valoreslicenca', licencaController.criarValorLicenca);
+
+app.get('/distribuidoras', async (req, res) => {
+  try {
+    const distribuidoras = await Valor.findAll({
+      attributes: ['distribuidora', 'idDistribuidora', [Sequelize.fn('SUM', Sequelize.col('idCustoLicenca')), 'valorTotal']],
+      group: ['distribuidora', 'idDistribuidora'],
+    });
+
+    res.json(distribuidoras);
+  } catch (error) {
+    console.error('Erro ao buscar as distribuidoras:', error);
+    res.status(500).json({ error: 'Erro ao buscar as distribuidoras' });
+  }
+});
+
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);
