@@ -93,15 +93,53 @@ let tamanho = 0;
 
     // Atualizar as colunas booleanas com base nas licenças do usuário
     const userLicenses = {
-      exchangeOnlinePlan1: licencasArray.includes('Exchange Online (Plan 1)'),
-      office365E3: licencasArray.includes('Office 365 E3'),
-      powerBIFree: licencasArray.includes('Power BI (free)'),
-      enterpriseMobility: licencasArray.includes('Enterprise Mobility'),
-      securityE3: licencasArray.includes('Security E3'),
-      microsoftTeamsExploratory: licencasArray.includes('Microsoft Teams Exploratory'),
-      microsoftPowerAutomateFree: licencasArray.includes('Microsoft Power Automate Free')
-      // Atualize com mais colunas conforme a necessidade para outras licenças
-    };
+    exchangeOnlinePlan1: licencasArray.includes('Exchange Online (Plan 1)'),
+    office365E3: licencasArray.includes('Office 365 E3'),
+    powerBIFree: licencasArray.includes('Power BI (free)'),
+    enterpriseMobility: licencasArray.includes('Enterprise Mobility'),
+    securityE3: licencasArray.includes('Security E3'),
+    microsoftTeamsExploratory: licencasArray.includes('Microsoft Teams Exploratory'),
+    microsoftPowerAutomateFree: licencasArray.includes('Microsoft Power Automate Free'),
+    // Licenças adicionais
+    azureActiveDirectoryPremiumP1: licencasArray.includes('Azure Active Directory Premium P1'),
+    dynamics365CustomerInsightsSelfServiceTrial: licencasArray.includes('Dynamics 365 Customer Insights Self-Service Trial'),
+    dynamics365CustomerInsightsVTrial: licencasArray.includes('Dynamics 365 Customer Insights vTrial'),
+    dynamics365CustomerServiceEnterpriseVTrial: licencasArray.includes('Dynamics 365 Customer Service Enterprise vTrial'),
+    dynamics365CustomerVoiceTrial: licencasArray.includes('Dynamics 365 Customer Voice Trial'),
+    dynamics365FieldServiceVTrial: licencasArray.includes('Dynamics 365 Field Service vTrial'),
+    dynamics365Finance: licencasArray.includes('Dynamics 365 Finance'),
+    dynamics365OperationsActivity: licencasArray.includes('Dynamics 365 Operations – Activity'),
+    dynamics365P1TrialforInformationWorkers: licencasArray.includes('Dynamics 365 P1 Trial for Information Workers'),
+    dynamics365SalesEnterpriseEdition: licencasArray.includes('Dynamics 365 Sales Enterprise Edition'),
+    dynamics365SalesPremiumViralTrial: licencasArray.includes('Dynamics 365 Sales Premium Viral Trial'),
+    dynamics365SupplyChainManagement: licencasArray.includes('Dynamics 365 Supply Chain Management'),
+    dynamics365SupplyChainManagementAttachtoQualifyingDynamics365BaseOffer: licencasArray.includes('Dynamics 365 Supply Chain Management Attach to Qualifying Dynamics 365 Base Offer'),
+    dynamics365TeamMembers: licencasArray.includes('Dynamics 365 Team Members'),
+    enterpriseMobilitySecurityE3: licencasArray.includes('Enterprise Mobility + Security E3'),
+    enterpriseMobilitySecurityE5: licencasArray.includes('Enterprise Mobility + Security E5'),
+    exchangeOnlinePlan1: licencasArray.includes('Exchange Online (Plan 1)'),
+    microsoftBusinessCenter: licencasArray.includes('Microsoft Business Center'),
+    microsoftDynamicsAX7UserTrial: licencasArray.includes('Microsoft Dynamics AX7 User Trial'),
+    microsoftFabricFree: licencasArray.includes('Microsoft Fabric (Free)'),
+    microsoftPowerAppsforDeveloper: licencasArray.includes('Microsoft Power Apps for Developer'),
+    microsoftPowerAppsPlan2Trial: licencasArray.includes('Microsoft Power Apps Plan 2 Trial'),
+    microsoftPowerAutomateFree: licencasArray.includes('Microsoft Power Automate Free'),
+    microsoftStreamTrial: licencasArray.includes('Microsoft Stream Trial'),
+    microsoftTeamsExploratory: licençasArray.includes('Microsoft Teams Exploratory'),
+    microsoftTeamsRoomsBasic: licencasArray.includes('Microsoft Teams Rooms Basic'),
+    microsoftTeamsRoomsPro: licencasArray.includes('Microsoft Teams Rooms Pro'),
+    office365E3: licencasArray.includes('Office 365 E3'),
+    powerBIPro: licencasArray.includes('Power BI Pro'),
+    powerPagesVTrialforMakers: licencasArray.includes('Power Pages vTrial for Makers'),
+    powerVirtualAgentsViralTrial: licencasArray.includes('Power Virtual Agents Viral Trial'),
+    projectOnlineEssentials: licencasArray.includes('Project Online Essentials'),
+    projectPlan1: licencasArray.includes('Project Plan 1'),
+    projectPlan3: licencasArray.includes('Project Plan 3'),
+    projectPlan5: licencasArray.includes('Project Plan 5'),
+    rightsManagementAdhoc: licencasArray.includes('Rights Management Adhoc'),
+    visioPlan2: licencasArray.includes('Visio Plan 2'),
+    // Adicione mais colunas conforme a necessidade para outras licenças
+  };
 
     const existingValor = await Valor.findOne({
       where: {
