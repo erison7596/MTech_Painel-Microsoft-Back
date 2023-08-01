@@ -127,7 +127,7 @@ const Valor = db.define('valor', {
     allowNull: false,
     defaultValue: false
   },
-  dynamics365SupplyChainManagementAttachtoQualifyingDynamics365BaseOffer: {
+  d365SupplyChainAttach: {
     type: Sequelize.BOOLEAN,
     allowNull: false,
     defaultValue: false

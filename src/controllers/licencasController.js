@@ -1,4 +1,5 @@
 const Licenca = require('../models/licencas');
+const HistoricoLicenca = require('../models/historicoLicenca');
 
 async function criarValorLicenca(req, res) {
   const { licencas } = req.body;
@@ -17,9 +18,12 @@ async function criarValorLicenca(req, res) {
       const existingLicenca = await Licenca.findOne({ where: { nome } });
 
       if (existingLicenca) {
-        // A licença com o mesmo nome existe, atualiza o valor dela
-        existingLicenca.valor = valor;
-        await existingLicenca.save();
+        if (existingLicenca.valor !== valor) {
+          // O valor da licença está sendo alterado, então adicionamos um novo registro no histórico
+          await HistoricoLicenca.create({ valor: existingLicenca.valor, data: new Date(), licencaId: existingLicenca.id });
+          existingLicenca.valor = valor;
+          await existingLicenca.save();
+        }
       } else {
         // A licença com esse nome não existe, cria uma nova entrada
         await Licenca.create({ nome, valor });
@@ -33,7 +37,6 @@ async function criarValorLicenca(req, res) {
   }
 }
 
-
 async function obterValoresLicencas(req, res) {
   try {
     const valoresLicencas = await Licenca.findAll();
@@ -45,9 +48,9 @@ async function obterValoresLicencas(req, res) {
   }
 }
 
+// Adicione outras funções conforme necessário
 
 module.exports = {
   criarValorLicenca,
-  obterValoresLicencas
-  // Adicione outras funções conforme necessário
+  obterValoresLicencas,
 };

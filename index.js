@@ -10,6 +10,7 @@ const licencaController = require('./src/controllers/licencasController');
 const Licenca = require('./src/models/licencas');
 const bodyParser = require('body-parser');
 const Sequelize = require('sequelize');
+const relatorioController = require('./src/controllers/relatoriosController');
 
 const app = express();
 const port = 4000;
@@ -37,22 +38,26 @@ db.authenticate().then(() => {
 
 app.use(cors(corsOptions));
 
-app.get('/',async (req, res) => {
-   try {
-    const mediaIdCustoLicenca = await Valor.findAll({
-      attributes: [[Valor.sequelize.fn('AVG', Valor.sequelize.col('idCustoLicenca')), 'mediaIdCustoLicenca']],
-    });
-     //deixar a medica com duas casas decimais
-    mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca = mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca.toFixed(2);
-    const quantidadeNomeExibicao = await Valor.count('nomeExibicao');
-    
-    const quantidadeLicencas = await Valor.count('licencas');
+app.get('/', async (req, res) => {
+  try {
+    const custoTotal = await relatorioController.calcularCustoTotal();
+    const custoTotalMesAnterior = await relatorioController.calcularCustoTotalMesAnterior();
+    const quantidadeLicencasAtivas = await relatorioController.calcularQuantidadeLicencasAtivas();
+    const quantidadeUsuarios = await relatorioController.calcularQuantidadeUsuarios();
+    const valorMedioPorUsuario = await relatorioController.calcularValorMedioPorUsuario();
+    const valorTotalLicencas = await relatorioController.calcularValorTotalLicencas();
+    const historicoCustoTotal = await relatorioController.calcularHistoricoCustoTotal();
 
     const resultado = {
-      mediaIdCustoLicenca: mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca,
-      quantidadeNomeExibicao,
-      quantidadeLicencas,
-      divisaoLicencasPorMedia:mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca/quantidadeLicencas,
+      custoTotal,
+      custoTotalMesAnterior,
+      quantidadeLicencasAtivas,
+      quantidadeUsuarios,
+      valorMedioPorUsuario,
+      valorTotalLicencas,
+      historicoCustoTotal,
+      divisaoLicencasPorMedia: custoTotal / quantidadeLicencasAtivas,
+      // Outras informações calculadas, se necessário
     };
 
     res.json(resultado);
