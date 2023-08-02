@@ -20,13 +20,23 @@ async function criarValorLicenca(req, res) {
       if (existingLicenca) {
         if (existingLicenca.valor !== valor) {
           // O valor da licença está sendo alterado, então adicionamos um novo registro no histórico
-          await HistoricoLicenca.create({ valor: existingLicenca.valor, data: new Date(), licencaId: existingLicenca.id });
+          await HistoricoLicenca.create({
+            valor: existingLicenca.valor,
+            data: new Date(),
+            licencaId: existingLicenca.id, // Utiliza o ID da licença como licencaId no histórico
+          });
           existingLicenca.valor = valor;
           await existingLicenca.save();
         }
       } else {
         // A licença com esse nome não existe, cria uma nova entrada
-        await Licenca.create({ nome, valor });
+        const novaLicenca = await Licenca.create({ nome, valor });
+        // Cria o histórico para a nova licença
+        await HistoricoLicenca.create({
+          valor: novaLicenca.valor,
+          data: new Date(),
+          licencaId: novaLicenca.id, // Utiliza o ID da nova licença como licencaId no histórico
+        });
       }
     }
 

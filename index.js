@@ -41,23 +41,26 @@ app.use(cors(corsOptions));
 app.get('/', async (req, res) => {
   try {
     const custoTotal = await relatorioController.calcularCustoTotal();
+    const listarLicenca = await relatorioController.listarLicencas();
+    const listarLicencaOrdenada = relatorioController.ordenarPorQuantidade(listarLicenca);
     const custoTotalMesAnterior = await relatorioController.calcularCustoTotalMesAnterior();
     const quantidadeLicencasAtivas = await relatorioController.calcularQuantidadeLicencasAtivas();
     const quantidadeUsuarios = await relatorioController.calcularQuantidadeUsuarios();
     const valorMedioPorUsuario = await relatorioController.calcularValorMedioPorUsuario();
-    const valorTotalLicencas = await relatorioController.calcularValorTotalLicencas();
-    const historicoCustoTotal = await relatorioController.calcularHistoricoCustoTotal();
-
+    const valorTotalLicencas = await relatorioController.calcularValorTotalDeCadaLicenca();
+    const valorTotalLicencasOrdenado = relatorioController.ordenarPorQuantidade(valorTotalLicencas);
+    const calcularHistoricoCustoTotalAno = await relatorioController.calcularHistoricoCustoTotalAno();
+    const licencasPorAno = await relatorioController.calcularValorTotalDeCadaLicencaAno();    
     const resultado = {
       custoTotal,
+      calcularHistoricoCustoTotalAno,
+      listarLicencaOrdenada,
       custoTotalMesAnterior,
       quantidadeLicencasAtivas,
       quantidadeUsuarios,
       valorMedioPorUsuario,
-      valorTotalLicencas,
-      historicoCustoTotal,
-      divisaoLicencasPorMedia: custoTotal / quantidadeLicencasAtivas,
-      // Outras informações calculadas, se necessário
+      valorTotalLicencasOrdenado,
+      licencasPorAno
     };
 
     res.json(resultado);
