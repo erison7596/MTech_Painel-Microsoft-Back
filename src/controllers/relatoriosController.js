@@ -4,6 +4,7 @@ const Valor = require('../models/valor');
 const HistoricoLicenca = require('../models/historicoLicenca');
 const Licencas = require('../models/licencas');
 const { tr } = require('date-fns/locale');
+const db = require('../utils/database');
 
 async function listarLicencas() {
   try {
@@ -299,65 +300,31 @@ function ordenarPorQuantidade(objeto) {
 
 async function calcularValorTotalDeCadaLicencaAno() {
   try {
-    const licencas = await Licencas.findAll();
-    const anosDistintos = await HistoricoLicenca.findAll({
-      attributes: [
-        [Sequelize.fn('YEAR', Sequelize.col('data')), 'ano']
-      ],
-      group: ['ano'],
-      raw: true,
-    });
+    const query = `
+      SELECT l.nome, YEAR(h.data) AS ano, h.valor
+      FROM historico_licencas h
+      JOIN (
+          SELECT licencaId, YEAR(data) AS ano, MAX(data) AS max_data
+          FROM historico_licencas
+          GROUP BY licencaId, YEAR(data)
+      ) ultima_data
+      ON h.licencaId = ultima_data.licencaId AND YEAR(h.data) = ultima_data.ano AND h.data = ultima_data.max_data
+      RIGHT JOIN licencas l
+      ON l.id = h.licencaId
+      WHERE YEAR(h.data) < YEAR(NOW())
+      
+      UNION
 
-    const historicoPorAno = {};
+      SELECT l.nome, 2023 AS ano, l.valor
+      FROM licencas l;
+    `;
 
-    for (const { ano } of anosDistintos) {
-      const historicosDoAno = await HistoricoLicenca.findAll({
-        where: {
-          data: {
-            [Op.between]: [`${ano}-01-01`, `${ano}-12-31`],
-          },
-        },
-        order: [['data', 'DESC']],
-        include: {
-          model: Licencas,
-        },
-      });
-
-      const valorTotalPorLicenca = {};
-
-      for (const historico of historicosDoAno) {
-        const licenca = historico.Licenca;
-        const nomeLicenca = licenca ? licenca.nome : null;
-        const valorLicenca = licenca ? licenca.valor : 0;
-
-        if (nomeLicenca) {
-          if (valorTotalPorLicenca[nomeLicenca]) {
-            valorTotalPorLicenca[nomeLicenca] += parseFloat(valorLicenca);
-          } else {
-            valorTotalPorLicenca[nomeLicenca] = parseFloat(valorLicenca);
-          }
-        } else {
-          console.error('Licença não encontrada no histórico:', historico.dataValues);
-        }
-      }
-
-      historicoPorAno[ano] = Object.entries(valorTotalPorLicenca).map(([nome, valor]) => ({
-        nome,
-        valor: valor.toFixed(2),
-      }));
-    }
-
-    return { licencasPorAno: historicoPorAno };
+    const results = await db.query(query, { type: db.QueryTypes.SELECT });
+    return results;
   } catch (error) {
-    throw new Error('Erro ao calcular o histórico do valor total de cada licença por ano:' + error.message);
+    throw new Error('Erro ao calcular o histórico do valor total de cada licença por ano: ' + error.message);
   }
 }
-
-
-
-
-
-
 
 
 
