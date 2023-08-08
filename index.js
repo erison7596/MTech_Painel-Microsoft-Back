@@ -42,25 +42,31 @@ app.get('/', async (req, res) => {
   try {
     const custoTotal = await relatorioController.calcularCustoTotal();
     const listarLicenca = await relatorioController.listarLicencas();
-    const listarLicencaOrdenada = relatorioController.ordenarPorQuantidade(listarLicenca);
+    const listarLicencaOrdenada = relatorioController.ordenarPorQuantidade(listarLicenca); //funcionando certo
     const custoTotalMesAnterior = await relatorioController.calcularCustoTotalMesAnterior();
-    const quantidadeLicencasAtivas = await relatorioController.calcularQuantidadeLicencasAtivas();
-    const quantidadeUsuarios = await relatorioController.calcularQuantidadeUsuarios();
+    const quantidadeLicencasAtivas = await relatorioController.calcularQuantidadeLicencasAtivas(); //funcionando certo
+    const quantidadeUsuarios = await relatorioController.calcularQuantidadeUsuarios(); //funcionando certo
     const valorMedioPorUsuario = await relatorioController.calcularValorMedioPorUsuario();
     const valorTotalLicencas = await relatorioController.calcularValorTotalDeCadaLicenca();
     const valorTotalLicencasOrdenado = relatorioController.ordenarPorQuantidade(valorTotalLicencas);
-    const calcularHistoricoCustoTotalAno = await relatorioController.calcularHistoricoCustoTotalAno();
+    const calcularHistoricoCustoTotalAno = await relatorioController.calcularHistoricoCustoTotalAno(); //funcionando certo
     const licencasPorAno = await relatorioController.calcularValorTotalDeCadaLicencaAno();    
+
+    const diferencaDoMesAtualComPassado = await relatorioController.DiferencaDoMesAtualComPassado();
+
+    const diferencaLicencaAtualComPassado = await relatorioController.DiferencaLicencaAtualComPassado();
     const resultado = {
       custoTotal,
-      calcularHistoricoCustoTotalAno,
-      listarLicencaOrdenada,
-      custoTotalMesAnterior,
-      quantidadeLicencasAtivas,
-      quantidadeUsuarios,
-      valorMedioPorUsuario,
-      valorTotalLicencasOrdenado,
-      licencasPorAno
+      calcularHistoricoCustoTotalAno, //funcionando certo
+      listarLicencaOrdenada, //funcionando certo
+      custoTotalMesAnterior, //funcionando certo
+      quantidadeLicencasAtivas, //funcionando certo
+      quantidadeUsuarios, //funcionando certo
+      valorMedioPorUsuario, //funcionando certo
+      valorTotalLicencasOrdenado, //funcionando certo
+      licencasPorAno, //funcionando certo
+      diferencaDoMesAtualComPassado, //funcionando certo
+      diferencaLicencaAtualComPassado //funcionando certo
     };
 
     res.json(resultado);

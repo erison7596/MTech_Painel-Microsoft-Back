@@ -1,18 +1,21 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const db = require('../utils/database');
-const HistoricoLicenca = require('./historicoLicenca');
 
 const Licenca = db.define('licenca', {
   nome: {
     type: Sequelize.STRING,
-    allowNull: false
+    allowNull: false,
+    primaryKey: true
   },
   valor: {
     type: Sequelize.FLOAT,
     allowNull: false
   }
 });
-
+// Associação entre Licenca e HistoricoLicenca
+const HistoricoLicenca = require('../models/historicoLicenca');
+Licenca.hasMany(HistoricoLicenca, { onDelete: 'cascade' });
+HistoricoLicenca.belongsTo(Licenca);
 // Função para criar as licenças iniciais com valor 0, caso ainda não existam
 async function criarLicencasIniciais() {
   try {
@@ -31,8 +34,9 @@ async function criarLicencasIniciais() {
   { nome: 'Dynamics 365 Supply Chain Management', valor: 0 },
   { nome: 'Dynamics 365 Supply Chain Management Attach to Qualifying Dynamics 365 Base Offer', valor: 0 },
   { nome: 'Dynamics 365 Team Members', valor: 0 },
-  { nome: 'Enterprise Mobility + Security E3', valor: 0 },
-  { nome: 'Enterprise Mobility + Security E5', valor: 0 },
+  { nome: 'Enterprise Mobility', valor: 0 },
+  { nome: 'Security E3', valor: 0 },
+  { nome: 'Security E5', valor: 0 },
   { nome: 'Exchange Online (Plan 1)', valor: 0 },
   { nome: 'Microsoft Business Center', valor: 0 },
   { nome: 'Microsoft Dynamics AX7 User Trial', valor: 0 },
@@ -57,28 +61,26 @@ async function criarLicencasIniciais() {
 ];
 
 
-    // Verifica se as licenças iniciais já existem no banco
     const existingLicencas = await Licenca.findAll();
     if (existingLicencas.length === 0) {
       // Se não existirem, cria as licenças iniciais
       await Licenca.bulkCreate(licencasIniciais);
-      console.log('Licenças iniciais criadas com sucesso');
+      // console.log('Licenças iniciais criadas com sucesso');
     }
   } catch (error) {
     console.error('Erro ao criar licenças iniciais:', error);
   }
 }
 
-// Chama a função para criar as licenças iniciais
-criarLicencasIniciais();
-
-// Associação entre Licenca e HistoricoLicenca
-Licenca.hasMany(HistoricoLicenca, { onDelete: 'cascade' });
-HistoricoLicenca.belongsTo(Licenca);
-
-// Inicialização do banco de dados e sincronização da tabela
-Licenca.sync({ force: false }).then(() => {
-  console.log('Tabela de licenças criada com sucesso');
+// Sincroniza a tabela Licenca com o banco de dados
+Licenca.sync({force:false}).then(() => {
+  // console.log('Tabela de licenças criada com sucesso');
+  // Chama a função para criar as licenças iniciais após a sincronização
+  criarLicencasIniciais();
 });
 
 module.exports = Licenca;
+
+
+
+

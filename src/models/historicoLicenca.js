@@ -1,13 +1,13 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const db = require('../utils/database');
-const Licenca = require('./licencas'); // Importe o modelo Licenca
+const Licenca = require('./licencas');
 
 const HistoricoLicenca = db.define('historico_licenca', {
-  id: {
-    type: DataTypes.INTEGER,
+  
+
+  nome: {
+    type: DataTypes.STRING,
     allowNull: false,
-    primaryKey: true,
-    autoIncrement: true,
   },
   valor: {
     type: Sequelize.FLOAT,
@@ -17,28 +17,22 @@ const HistoricoLicenca = db.define('historico_licenca', {
     type: Sequelize.DATE,
     allowNull: false,
   },
-  licencaId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    references: {
-      model: 'licencas', // Nome da tabela referenciada
-      key: 'id', // Nome da coluna chave primária referenciada
-    },
-  },
-   createdAt: {
+  createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'), // Definindo valor padrão para a data atual
   },
-   updatedAt: {
+  updatedAt: {
     type: DataTypes.DATE,
     allowNull: false,
     defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'), // Definindo valor padrão para a data atual
   },
 });
 
+// Defina a associação após a definição do modelo
+
 HistoricoLicenca.sync({ force: false }).then(() => {
-  console.log('Tabela de histórico de licenças criada com sucesso');
+  // console.log('Tabela de histórico de licenças criada com sucesso');
 });
 
 module.exports = HistoricoLicenca;

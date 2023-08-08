@@ -5,10 +5,9 @@ const HistoricoLicenca = require('../models/historicoLicenca');
 const Licencas = require('../models/licencas');
 const { tr } = require('date-fns/locale');
 const db = require('../utils/database');
+const HistoricoMesLicenca = require('../models/historicoMesLicenca');
 
-async function listarLicencas() {
-  try {
-    const licenseMapping = {
+const licenseMapping = {
     exchangeOnlinePlan1: 'Exchange Online (Plan 1)',
     office365E3: 'Office 365 E3',
     powerBIFree: 'Power BI (free)',
@@ -53,7 +52,11 @@ async function listarLicencas() {
     projectPlan5: 'Project Plan 5',
     rightsManagementAdhoc: 'Rights Management Adhoc',
     visioPlan2: 'Visio Plan 2',
-  };
+};
+  
+async function listarLicencas() {
+  try {
+    
     const licencasComValorUm = {};
 
     // Obtem todas as colunas do modelo Valor
@@ -93,15 +96,30 @@ async function calcularCustoTotal() {
       const valor = licenca.dataValues.valor;
 
       if (nome && valor) {
-        const valorLicenca = valoresLicencas[nome] * valor;
-        return total + valorLicenca;
+        if (valoresLicencas[nome] !== undefined) {
+          const valorLicenca = valoresLicencas[nome] * valor;
+          if (!isNaN(valorLicenca)) {
+            return total + valorLicenca;
+          } else {
+            console.error('Valor de licença inválido:', valoresLicencas[nome]);
+            return total;
+          }
+        } else {
+          console.error('Nome de licença não encontrado:', nome);
+          return total;
+        }
       } else {
         console.error('Valor ausente ou inconsistente para calcular o custo total:', licenca.dataValues);
         return total;
       }
     }, 0);
 
-    return custoTotal.toFixed(2);
+    if (!isNaN(custoTotal)) {
+      return custoTotal.toFixed(2);
+    } else {
+      console.error('Custo total inválido:', custoTotal);
+      return 'Erro no cálculo do custo total';
+    }
   } catch (error) {
     throw new Error('Erro ao calcular o custo total:', error);
   }
@@ -109,78 +127,251 @@ async function calcularCustoTotal() {
 
 
 
-async function calcularCustoTotalMesAnterior() {
+
+
+
+
+
+
+
+
+async function QuantidadePorMesEAno() {
   try {
-    const dataAtual = new Date();
-    const primeiroDiaMesAtual = new Date(dataAtual.getFullYear(), dataAtual.getMonth(), 1);
-    const primeiroDiaMesAnterior = new Date(dataAtual.getFullYear(), dataAtual.getMonth() - 1, 1);
+    // Consulta ao banco de dados usando o método findAll()
+    const historicos = await HistoricoMesLicenca.findAll();
 
-    // Convertendo as datas para formato UTC
-    const primeiroDiaMesAtualUTC = primeiroDiaMesAtual.toISOString();
-    const primeiroDiaMesAnteriorUTC = primeiroDiaMesAnterior.toISOString();
+    // Criação do objeto que conterá os resultados formatados
+    const resultadoFormatado = {};
 
-    console.log('Data atual:', dataAtual.toISOString());
-    console.log('Primeiro dia do mês atual:', primeiroDiaMesAtualUTC);
-    console.log('Primeiro dia do mês anterior:', primeiroDiaMesAnteriorUTC);
-
-    const historicoCustoTotal = await HistoricoLicenca.sum('valor', {
-      where: {
-        data: {
-          [Op.between]: [primeiroDiaMesAnteriorUTC, primeiroDiaMesAtualUTC],
-        },
-      },
+    // Percorre cada registro retornado e formata no formato desejado
+    historicos.forEach((historico) => {
+      const { id, mes, ano, ...outrasColunasLicencas } = historico.dataValues;
+      if (!resultadoFormatado[ano]) {
+        resultadoFormatado[ano] = {};
+      }
+      if (!resultadoFormatado[ano][mes]) {
+        resultadoFormatado[ano][mes] = {};
+      }
+      Object.assign(resultadoFormatado[ano][mes], outrasColunasLicencas);
     });
-    if (historicoCustoTotal === null) {
-      return 0; // Retorna zero se o histórico estiver vazio
-    }
-    console.log('Custo total mês anterior2:', historicoCustoTotal.toFixed(2));
-    return historicoCustoTotal.toFixed(2);
+
+    // Retorna o resultado formatado em formato JSON
+    // console.log(JSON.stringify(resultadoFormatado, null, 2));
+    return resultadoFormatado;
+
+
+
+
   } catch (error) {
-    console.error('Erro ao calcular o custo total do mês anterior:', error);
-    return null;
+    console.error('Erro ao calcular o histórico de custo total:', error);
+    throw error;
   }
 }
+
+async function HistoricoValLicencas() {
+  try {
+    const historicos = await HistoricoLicenca.findAll({
+      attributes: ['nome', 'valor', 'data'],
+      order: [['data', 'DESC']] // Ordena os resultados por data em ordem decrescente
+    });
+
+    const resultadoFormatado = {};
+
+    historicos.forEach((historico) => {
+      const { nome, valor, data } = historico.dataValues;
+      const year = data.getFullYear();
+      const month = data.getMonth() + 1;
+
+      if (!resultadoFormatado[year]) {
+        resultadoFormatado[year] = {};
+      }
+      if (!resultadoFormatado[year][month]) {
+        resultadoFormatado[year][month] = {};
+      }
+
+      resultadoFormatado[year][month][nome] = valor;
+    });
+
+    // Filtra apenas as últimas licenças de cada mês
+    const ultimasLicencasPorMes = {};
+    for (const year in resultadoFormatado) {
+      for (const month in resultadoFormatado[year]) {
+        const licencasDoMes = resultadoFormatado[year][month];
+        const ultimasLicencas = {};
+
+        for (const nome in licencasDoMes) {
+          const valor = licencasDoMes[nome];
+          ultimasLicencas[nome] = valor;
+        }
+
+        ultimasLicencasPorMes[year] = {
+          ...ultimasLicencasPorMes[year],
+          [month]: ultimasLicencas
+        };
+      }
+    }
+
+    // console.log(JSON.stringify(ultimasLicencasPorMes, null, 2));
+    return ultimasLicencasPorMes;
+  } catch (error) {
+    console.error('Erro ao obter os valores calculados:', error);
+    throw error;
+  }
+}
+
+
+async function ValoresAtuaisLicencas() { 
+  try {
+    const licencas = await Licencas.findAll(); // Supondo que 'Licencas' seja o modelo ou objeto que acessa a base de dados
+    
+    const valoresAtuais = {};
+
+    for (const licenca of licencas) {
+      const nomeLicenca = licenca.nome; // Supondo que o campo 'nome' seja onde o nome da licença é armazenado
+      const valorLicenca = licenca.valor; // Supondo que o campo 'valor' seja onde o valor da licença é armazenado
+      
+      valoresAtuais[nomeLicenca] = valorLicenca;
+    }
+    
+    return valoresAtuais;
+  } catch (error) {
+    console.error('Erro ao obter os valores atuais das licenças:', error);
+    throw error;
+  }
+}
+
+
+
+
+
+//erro aqui nessa função
+async function calcularHistoricoCustoTotalAnoEMes() {
+  try {
+    const quantidadePorMesEAno = await QuantidadePorMesEAno();
+    const historicoValLicencas = await HistoricoValLicencas();
+    const valoresAtuaisLicencas = await ValoresAtuaisLicencas();
+    const data = new Date();
+    const anoAtual = data.getFullYear();
+    const mesAtual = data.getMonth() + 1;
+    const custoTotalPorLicenca = {};
+
+          for (const ano in quantidadePorMesEAno) {
+            for (const mes in quantidadePorMesEAno[ano]) {
+                if (mes !== "usuarios") {
+                    if (!custoTotalPorLicenca[ano]) {
+                        custoTotalPorLicenca[ano] = {};
+                    }
+
+                    if (!custoTotalPorLicenca[ano][mes]) {
+                        custoTotalPorLicenca[ano][mes] = {};
+                    }
+
+                    const mesQuantidade = quantidadePorMesEAno[ano][mes];
+                  const mesHistoricoValores = historicoValLicencas[ano]?.[mes];
+                    const isMesAtual = ano == anoAtual && mes == mesAtual;
+                    const licencasCalculadas = {}; // Para rastrear licenças já calculadas
+
+                    for (const licenca in mesQuantidade) {
+                        if (licenca !== "usuarios" && !licencasCalculadas[licenca]) {
+                            const quantidade = mesQuantidade[licenca];
+                            const licencaNome = licenseMapping[licenca] || licenca;
+                            let valorUnitario = 0;
+
+                            if (isMesAtual) {
+                                valorUnitario = valoresAtuaisLicencas[licencaNome] || 0;
+                            } else {
+                                valorUnitario = mesHistoricoValores?.[licencaNome] || 0;
+                            }
+
+                            if (!custoTotalPorLicenca[ano][mes][licencaNome]) {
+                                custoTotalPorLicenca[ano][mes][licencaNome] = 0;
+                            }
+
+                            custoTotalPorLicenca[ano][mes][licencaNome] += quantidade * valorUnitario;
+                            licencasCalculadas[licenca] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return custoTotalPorLicenca;
+    } catch (error) {
+        throw new Error("Ocorreu um erro ao calcular o custo total por licença: " + error.message);
+    }
+}
+
+async function calcularCustoTotalMesAnterior() {
+  try {
+    const custoTotalPorLicenca = await calcularHistoricoCustoTotalAno();
+
+    const dataAtual = new Date();
+    const anoAtual = dataAtual.getFullYear();
+    const mesAtual = dataAtual.getMonth() + 1;
+    const mesAnterior = mesAtual === 1 ? 12 : mesAtual - 1;
+    const anoAnterior = mesAtual === 1 ? anoAtual - 1 : anoAtual;
+
+    const anoAnteriorData = custoTotalPorLicenca[anoAnterior.toString()];
+    let valorTotalMesAnterior = 0;
+
+    if (anoAnteriorData) {
+      const mesAnteriorData = anoAnteriorData.find(item => item.mes === mesAnterior);
+      if (mesAnteriorData) {
+        valorTotalMesAnterior = mesAnteriorData.Total;
+      }
+    }
+
+    // console.log('Custo total do mês anterior:', valorTotalMesAnterior.toFixed(2));
+    return valorTotalMesAnterior.toFixed(2);
+  } catch (error) {
+    console.error('Erro ao calcular o custo total do mês anterior:', error);
+    return "0.00"; // Retornar "0.00" caso ocorra um erro
+  }
+}
+
+
+
+
+
+
+
+
+
 
 async function calcularHistoricoCustoTotalAno() {
   try {
-    const dataAtual = new Date();
-    const historicoCustoTotalAno = {};
+   const historicoCustos = await calcularHistoricoCustoTotalAnoEMes();
+        const custoTotalPorAno = {};
 
-    for (let mes = 0; mes < 12; mes++) {
-      const primeiroDiaMes = new Date(dataAtual.getFullYear(), mes, 1);
-      const ultimoDiaMes = new Date(dataAtual.getFullYear(), mes + 1, 0);
+        for (const ano in historicoCustos) {
+            const meses = Object.keys(historicoCustos[ano]);
 
-      // Convertendo as datas para formato UTC
-      const primeiroDiaMesUTC = primeiroDiaMes.toISOString();
-      const ultimoDiaMesUTC = ultimoDiaMes.toISOString();
+            for (const mes of meses) {
+                const custosMes = historicoCustos[ano][mes];
+                const totalMes = Object.values(custosMes).reduce((acc, valor) => acc + valor, 0);
 
-      // console.log('Mês:', mes + 1);
-      // console.log('Primeiro dia do mês:', primeiroDiaMesUTC);
-      // console.log('Último dia do mês:', ultimoDiaMesUTC);
+                if (!custoTotalPorAno[ano]) {
+                    custoTotalPorAno[ano] = [];
+                }
 
-      const historicoCustoTotalMes = await HistoricoLicenca.sum('valor', {
-        where: {
-          data: {
-            [Op.between]: [primeiroDiaMesUTC, ultimoDiaMesUTC],
-          },
-        },
-      });
+                custoTotalPorAno[ano].push({
+                    mes: parseInt(mes),
+                    Total: totalMes
+                });
+            }
+        }
 
-      if (historicoCustoTotalMes === null) {
-        historicoCustoTotalAno[mes + 1] = 0;
-      } else {
-        historicoCustoTotalAno[mes + 1] = historicoCustoTotalMes.toFixed(2);
-      }
-
-      // console.log('Custo total do mês:', historicoCustoTotalAno[mes + 1]);
+        return custoTotalPorAno;
+    } catch (error) {
+        throw error;
     }
-
-    return historicoCustoTotalAno;
-  } catch (error) {
-    console.error('Erro ao calcular o histórico do custo total do ano:', error);
-    return null;
-  }
 }
+
+
+
+
+
+
 
 
 
@@ -304,13 +495,13 @@ async function calcularValorTotalDeCadaLicencaAno() {
       SELECT l.nome, YEAR(h.data) AS ano, h.valor
       FROM historico_licencas h
       JOIN (
-          SELECT licencaId, YEAR(data) AS ano, MAX(data) AS max_data
+          SELECT nome, YEAR(data) AS ano, MAX(data) AS max_data
           FROM historico_licencas
-          GROUP BY licencaId, YEAR(data)
+          GROUP BY nome, YEAR(data)
       ) ultima_data
-      ON h.licencaId = ultima_data.licencaId AND YEAR(h.data) = ultima_data.ano AND h.data = ultima_data.max_data
+      ON h.nome = ultima_data.nome AND YEAR(h.data) = ultima_data.ano AND h.data = ultima_data.max_data
       RIGHT JOIN licencas l
-      ON l.id = h.licencaId
+      ON l.nome = h.nome
       WHERE YEAR(h.data) < YEAR(NOW())
       
       UNION
@@ -326,6 +517,71 @@ async function calcularValorTotalDeCadaLicencaAno() {
   }
 }
 
+async function DiferencaDoMesAtualComPassado() {
+  try {
+    const mesAtual = await calcularCustoTotal();  // Aguardando a resolução da Promise
+    const mesPassado = await calcularCustoTotalMesAnterior();  // Aguardando a resolução da Promise
+
+    console.log("\n\n\n Mes atual: " + mesAtual + "\n\n\n");
+    console.log("\n\n\n Mes passado: " + mesPassado + "\n\n\n");
+    
+    // Calcular a diferença em %
+    const diferenca = ((mesAtual - mesPassado) / mesPassado) * 100;
+    console.log("\n\n\n Diferença do mês atual com o passado: " + diferenca + "%\n\n\n");
+    
+    // Retornar a diferença como float com duas casas decimais
+    return diferenca.toFixed(2);
+    
+  } catch (error) {
+    throw new Error('Erro ao calcular a diferença do mês atual com o passado: ' + error.message);
+  }
+}
+
+async function QuantidaDeUsuariosMes() {
+  try {
+    const quantidadePorMesEAno = await QuantidadePorMesEAno(); // Substitua pela chamada real da função
+
+    const usuariosPorMesEAno = {};
+
+    for (const ano in quantidadePorMesEAno) {
+      const meses = quantidadePorMesEAno[ano];
+      usuariosPorMesEAno[ano] = {};
+
+      for (const mes in meses) {
+        usuariosPorMesEAno[ano][mes] = meses[mes].usuarios;
+      }
+    }
+
+    return usuariosPorMesEAno;
+  } catch (error) {
+    throw new Error('Erro ao calcular a quantidade de usuários no mês: ' + error.message);
+  }
+}
+
+
+async function DiferencaLicencaAtualComPassado() {
+  try {
+    const quantidadePorMesEAno = await QuantidaDeUsuariosMes();
+    
+    const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
+
+    const usuariosMesAtual = quantidadePorMesEAno["2023"][mesAtual];
+    const usuariosMesAnterior = quantidadePorMesEAno["2023"][mesAtual - 1];
+
+    if (usuariosMesAnterior !== undefined && usuariosMesAnterior !== 0) {
+      const diferenca = ((usuariosMesAtual - usuariosMesAnterior) / usuariosMesAnterior) * 100;
+      return parseFloat(diferenca.toFixed(2));
+    } else {
+      return 0;
+    }
+  } catch (error) {
+    throw new Error('Erro ao calcular a diferença da licença atual com o passado: ' + error.message);
+  }
+}
+
+
+
+
 
 
 module.exports = {
@@ -338,5 +594,7 @@ module.exports = {
   calcularQuantidadeUsuarios,
   calcularValorMedioPorUsuario,
   calcularValorTotalDeCadaLicenca,
-  calcularValorTotalDeCadaLicencaAno
+  calcularValorTotalDeCadaLicencaAno,
+  DiferencaDoMesAtualComPassado,
+  DiferencaLicencaAtualComPassado
 };

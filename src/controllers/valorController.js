@@ -1,11 +1,13 @@
 const xlsx = require('xlsx');
 const moment = require('moment');
+const { Op, Sequelize,DataTypes } = require('sequelize');
 const db = require('../utils/database');
 const Valor = require('../models/valor');
 const ExcelJS = require('exceljs');
 const slugify = require('slugify');
 const express = require('express');
 const app = express();
+const HistoricoMesLicenca = require('../models/historicoMesLicenca');
 
 function getCellValue(column, row, worksheet) {
   const cellAddress = `${column}${row}`;
@@ -13,9 +15,73 @@ function getCellValue(column, row, worksheet) {
   return cell ? cell.v : undefined;
 }
 
+
+async function atualizarHistoricoMesLicenca() {
+  try {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = hoje.getFullYear();
+
+    let historicoMesLicenca = await HistoricoMesLicenca.findOne({
+      where: { mes: mesAtual, ano: anoAtual },
+    });
+
+    const registros = await Valor.findAll();
+    const quantidadeUsuarios = {};
+
+    registros.forEach((registro) => {
+      for (const coluna in registro.dataValues) {
+        if (typeof registro.dataValues[coluna] === 'boolean' && registro.dataValues[coluna] === true) {
+          quantidadeUsuarios[coluna] = (quantidadeUsuarios[coluna] || 0) + 1;
+        }
+      }
+    });
+
+     const usuariosPorDistribuidora = await Valor.findAll({
+        attributes: ['nomeExibicao', 'idDistribuidora', [Sequelize.fn('COUNT', Sequelize.col('nomeExibicao')), 'quantidade']],
+        group: ['nomeExibicao', 'idDistribuidora'],
+    });
+
+    // Filtrar e contar quantas vezes o mesmo nomeExibicao aparece em cada idDistribuidora
+    const quantidadeUsuarios2 = usuariosPorDistribuidora.reduce((total, registro) => {
+      // Verifica se o nomeExibicao já foi contado para essa idDistribuidora
+      if (!total[registro.idDistribuidora]) {
+        total[registro.idDistribuidora] = 1;
+      } else {
+        total[registro.idDistribuidora] += 1;
+      }
+      return total;
+    }, {});
+
+    // Somar todas as quantidades para obter o total de nomeExibicao em todas as idDistribuidora
+    const totalUsuarios = Object.values(quantidadeUsuarios2).reduce((total, quantidade) => total + quantidade, 0);
+
+    if (!historicoMesLicenca) {
+      historicoMesLicenca = await HistoricoMesLicenca.create({
+        mes: mesAtual,
+        ano: anoAtual,
+        usuarios: totalUsuarios,
+        ...quantidadeUsuarios,
+      });
+    } else {
+      historicoMesLicenca.update({
+        usuarios: totalUsuarios,
+        ...quantidadeUsuarios,
+      });
+    }
+
+    console.log('Histórico de licenças do mês atual atualizado com sucesso!');
+  } catch (error) {
+    console.error('Erro ao atualizar o histórico de licenças do mês:', error);
+    throw error;
+  }
+}
+
+
+
 async function importData(worksheet) {
   const range = xlsx.utils.decode_range(worksheet['!ref']);
-
+  
   // Encontrar o índice das colunas desejadas
   const columnNames = {
     'DISTRIBUIDORA': -1,
@@ -179,7 +245,7 @@ let tamanho = 0;
       });
     }
   }
-
+  await atualizarHistoricoMesLicenca();
   console.log('Dados importados com sucesso!');
 }
 

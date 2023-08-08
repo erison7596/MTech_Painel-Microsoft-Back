@@ -5,7 +5,7 @@ async function criarValorLicenca(req, res) {
   const { licencas } = req.body;
 
   if (!licencas || !Array.isArray(licencas)) {
-    console.log('Lista de licenças inválida:', licencas);
+    // console.log('Lista de licenças inválida:', licencas);
     return res.status(400).json({ error: 'Lista de licenças inválida' });
   }
 
@@ -21,9 +21,9 @@ async function criarValorLicenca(req, res) {
         if (existingLicenca.valor !== valor) {
           // O valor da licença está sendo alterado, então adicionamos um novo registro no histórico
           await HistoricoLicenca.create({
+            nome: nome, // Fornecer o valor do campo "nome" com o mesmo valor da variável "nome"
             valor: existingLicenca.valor,
             data: new Date(),
-            licencaId: existingLicenca.id, // Utiliza o ID da licença como licencaId no histórico
           });
           existingLicenca.valor = valor;
           await existingLicenca.save();
@@ -33,9 +33,9 @@ async function criarValorLicenca(req, res) {
         const novaLicenca = await Licenca.create({ nome, valor });
         // Cria o histórico para a nova licença
         await HistoricoLicenca.create({
+          nome: nome, // Fornecer o valor do campo "nome" com o mesmo valor da variável "nome"
           valor: novaLicenca.valor,
           data: new Date(),
-          licencaId: novaLicenca.id, // Utiliza o ID da nova licença como licencaId no histórico
         });
       }
     }
@@ -50,7 +50,6 @@ async function criarValorLicenca(req, res) {
 async function obterValoresLicencas(req, res) {
   try {
     const valoresLicencas = await Licenca.findAll();
-
     return res.json(valoresLicencas);
   } catch (error) {
     console.error('Erro ao obter valores de licenças:', error);
