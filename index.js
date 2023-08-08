@@ -54,7 +54,7 @@ app.get('/', async (req, res) => {
 
     const diferencaDoMesAtualComPassado = await relatorioController.DiferencaDoMesAtualComPassado();
 
-    const diferencaLicencaAtualComPassado = await relatorioController.DiferencaLicencaAtualComPassado();
+    const diferencaUsuarioAtualComPassado = await relatorioController.DiferencaLicencaAtualComPassado();
     const resultado = {
       custoTotal,
       calcularHistoricoCustoTotalAno, //funcionando certo
@@ -66,7 +66,7 @@ app.get('/', async (req, res) => {
       valorTotalLicencasOrdenado, //funcionando certo
       licencasPorAno, //funcionando certo
       diferencaDoMesAtualComPassado, //funcionando certo
-      diferencaLicencaAtualComPassado //funcionando certo
+      diferencaUsuarioAtualComPassado //funcionando certo
     };
 
     res.json(resultado);
