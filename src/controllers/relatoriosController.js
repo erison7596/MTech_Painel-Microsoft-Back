@@ -240,6 +240,56 @@ async function ValoresAtuaisLicencas() {
   }
 }
 
+async function QuantidadeDeLicencaMes() {
+  try {
+    const data = await QuantidadePorMesEAno();
+    const result = {};
+
+    for (const year in data) {
+        result[year] = {};
+        for (const month in data[year]) {
+            if (month !== "usuarios") {
+                let totalLicenses = 0;
+                for (const licenseType in data[year][month]) {
+                    if (licenseType !== "createdAt" && licenseType !== "updatedAt" && licenseType !== "usuarios") {
+                        totalLicenses += data[year][month][licenseType];
+                    }
+                }
+                result[year][month] = totalLicenses;
+            }
+        }
+    }
+
+    return result;
+    
+  }catch(error){
+    console.error('Erro ao obter a quantidade de licenças por mês:', error);
+    throw error;
+  }
+    
+}
+
+
+async function DiferencaLicecasAtuaisEAnteriores() { 
+  try {
+    const data = await QuantidadeDeLicencaMes();
+     const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
+
+    const usuariosMesAtual = data["2023"][mesAtual];
+    const usuariosMesAnterior = data["2023"][mesAtual - 1];
+
+    if (usuariosMesAnterior !== undefined && usuariosMesAnterior !== 0) {
+      const diferenca = ((usuariosMesAtual - usuariosMesAnterior) / usuariosMesAnterior) * 100;
+      return parseFloat(diferenca.toFixed(2));
+    } else {
+      return 0;
+    }
+  }catch (error) {
+    console.error('Erro ao obter a diferença entre as licenças atuais e anteriores:', error);
+    throw error;
+  }
+}
+
 
 
 
@@ -579,7 +629,54 @@ async function DiferencaLicencaAtualComPassado() {
   }
 }
 
+async function CalcularValorMedioPorPessoaMes() {
+  try {
+    const historicoCustoTotalAno = await calcularHistoricoCustoTotalAno();
+    const quantidadeUsuariosPorMes = await QuantidaDeUsuariosMes();
 
+    const resultado = {};
+
+    for (const year in historicoCustoTotalAno) {
+      resultado[year] = {};
+      for (const item of historicoCustoTotalAno[year]) {
+        const mes = item.mes;
+        const total = item.Total;
+        const usuarios = quantidadeUsuariosPorMes[year][mes];
+
+        if (usuarios !== undefined && usuarios !== 0) {
+          const valorMedioPorPessoa = total / usuarios;
+          resultado[year][mes] = valorMedioPorPessoa;
+        } else {
+          resultado[year][mes] = null;
+        }
+      }
+    }
+
+    return resultado;
+  } catch (error) {
+    throw new Error('Erro ao calcular o valor médio por pessoa por mês: ' + error.message);
+  }
+}
+
+
+async function DiferencaValorMedioAtualMesPassado() {
+  try {
+    const valorMedioPorPessoaPorMes = await CalcularValorMedioPorPessoaMes();
+    const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
+
+    const usuariosMesAtual = valorMedioPorPessoaPorMes["2023"][mesAtual];
+    const usuariosMesAnterior = valorMedioPorPessoaPorMes["2023"][mesAtual - 1];
+
+    if (usuariosMesAnterior !== undefined && usuariosMesAnterior !== 0) {
+      const diferenca = ((usuariosMesAtual - usuariosMesAnterior) / usuariosMesAnterior) * 100;
+      return parseFloat(diferenca.toFixed(2));
+    } else {
+      return 0;
+    }
+  }catch (error) {
+    throw new Error('Erro ao calcular a diferença do valor médio atual com o passado: ' + error.message);
+  }
+}
 
 
 
@@ -596,5 +693,7 @@ module.exports = {
   calcularValorTotalDeCadaLicenca,
   calcularValorTotalDeCadaLicencaAno,
   DiferencaDoMesAtualComPassado,
-  DiferencaLicencaAtualComPassado
+  DiferencaLicencaAtualComPassado,
+  DiferencaLicecasAtuaisEAnteriores,
+  DiferencaValorMedioAtualMesPassado
 };
