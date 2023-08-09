@@ -11,6 +11,7 @@ const Licenca = require('./src/models/licencas');
 const bodyParser = require('body-parser');
 const Sequelize = require('sequelize');
 const relatorioController = require('./src/controllers/relatoriosController');
+const relatorioSlugController = require('./src/controllers/relatorioSlugController');
 
 const app = express();
 const port = 4000;
@@ -80,7 +81,7 @@ app.get('/', async (req, res) => {
     console.error('Erro ao obter os valores calculados:', error);
     res.status(500).json({ error: 'Erro ao obter os valores calculados' });
   }
-});
+}); //finalizado 
 
 app.get('/listar', async (req, res) => {
   try {
@@ -129,18 +130,12 @@ app.post('/valoreslicenca', licencaController.criarValorLicenca);
 
 app.get('/distribuidoras', async (req, res) => {
   try {
-    const distribuidoras = await Valor.findAll({
-      attributes: [
-        'distribuidora',
-        'idDistribuidora',
-        'slug', 
-        [Sequelize.fn('FORMAT', Sequelize.literal('SUM(idCustoLicenca)'), 2), 'valorTotal']
-      ],
-      group: ['distribuidora', 'idDistribuidora', 'slug'],
-      order: [['distribuidora', 'ASC']] // Ordenando por distribuidora de forma ascendente (ASC)
-    });
+    const Distribuidoras = await relatorioSlugController.Distribuidoras();
+    const resultado = {
+      Distribuidoras,
+    };
 
-    res.json(distribuidoras);
+    res.json(Distribuidoras);
   } catch (error) {
     console.error('Erro ao buscar as distribuidoras:', error);
     res.status(500).json({ error: 'Erro ao buscar as distribuidoras' });
@@ -173,6 +168,24 @@ app.get('/distribuidora/:slug', async (req, res) => {
       quantidadeNomeExibicao,
       quantidadeLicencas,
       divisaoLicencasPorMedia: mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca / quantidadeLicencas,
+    };
+
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro ao obter os valores calculados:', error);
+    res.status(500).json({ error: 'Erro ao obter os valores calculados' });
+  }
+});
+
+app.get('/teste', async (req, res) => {
+  try {
+    const teste = await relatorioSlugController.QuantLicencaDistribuidoras();
+    const teste2 = await relatorioSlugController.ValLicencaDist();
+    const Distribuidoras = await relatorioSlugController.Distribuidoras();
+    const resultado = {
+      teste,
+      teste2,
+      Distribuidoras,
     };
 
     res.json(resultado);

@@ -1,9 +1,7 @@
-const moment = require('moment');
 const { Op, Sequelize,DataTypes } = require('sequelize');
 const Valor = require('../models/valor');
 const HistoricoLicenca = require('../models/historicoLicenca');
 const Licencas = require('../models/licencas');
-const { tr } = require('date-fns/locale');
 const db = require('../utils/database');
 const HistoricoMesLicenca = require('../models/historicoMesLicenca');
 
@@ -695,5 +693,6 @@ module.exports = {
   DiferencaDoMesAtualComPassado,
   DiferencaLicencaAtualComPassado,
   DiferencaLicecasAtuaisEAnteriores,
-  DiferencaValorMedioAtualMesPassado
+  DiferencaValorMedioAtualMesPassado,
+  ValoresAtuaisLicencas
 };
