@@ -8,6 +8,57 @@ const slugify = require('slugify');
 const express = require('express');
 const app = express();
 const HistoricoMesLicenca = require('../models/historicoMesLicenca');
+const HistoricoMesDistLicenca = require('../models/historicoMesDistLicenca');
+
+const colunasBooleanas = [
+    'exchangeOnlinePlan1',
+    'office365E3',
+    'powerBIFree',
+    'enterpriseMobility',
+    'securityE3',
+    'microsoftTeamsExploratory',
+    'microsoftPowerAutomateFree',
+    'azureActiveDirectoryPremiumP1',
+    'dynamics365CustomerInsightsSelfServiceTrial',
+    'dynamics365CustomerInsightsVTrial',
+    'dynamics365CustomerServiceEnterpriseVTrial',
+    'dynamics365CustomerVoiceTrial',
+    'dynamics365FieldServiceVTrial',
+    'dynamics365Finance',
+    'dynamics365OperationsActivity',
+    'dynamics365P1TrialforInformationWorkers',
+    'dynamics365SalesEnterpriseEdition',
+    'dynamics365SalesPremiumViralTrial',
+    'dynamics365SupplyChainManagement',
+    'd365SupplyChainAttach',
+    'dynamics365TeamMembers',
+    'enterpriseMobilitySecurityE3',
+    'enterpriseMobilitySecurityE5',
+    'exchangeOnlinePlan1',
+    'microsoftBusinessCenter',
+    'microsoftDynamicsAX7UserTrial',
+    'microsoftFabricFree',
+    'microsoftPowerAppsforDeveloper',
+    'microsoftPowerAppsPlan2Trial',
+    'microsoftPowerAutomateFree',
+    'microsoftStreamTrial',
+    'microsoftTeamsExploratory',
+    'microsoftTeamsRoomsBasic',
+    'microsoftTeamsRoomsPro',
+    'office365E3',
+    'powerBIPro',
+    'powerPagesVTrialforMakers',
+    'powerVirtualAgentsViralTrial',
+    'projectOnlineEssentials',
+    'projectPlan1',
+    'projectPlan3',
+    'projectPlan5',
+    'rightsManagementAdhoc',
+    'visioPlan2'
+];
+
+
+
 
 function getCellValue(column, row, worksheet) {
   const cellAddress = `${column}${row}`;
@@ -69,6 +120,7 @@ async function atualizarHistoricoMesLicenca() {
         ...quantidadeUsuarios,
       });
     }
+    
 
     console.log('Histórico de licenças do mês atual atualizado com sucesso!');
   } catch (error) {
@@ -76,6 +128,85 @@ async function atualizarHistoricoMesLicenca() {
     throw error;
   }
 }
+
+
+async function atualizarHistoricoMesDistribuidora() {
+  try {
+    const hoje = new Date();
+    const mesAtual = hoje.getMonth() + 1;
+    const anoAtual = hoje.getFullYear();
+    
+
+    // Encontrar todas as distribuidoras únicas presentes nos registros
+    const distribuidoras = await Valor.findAll({
+      attributes: ['idDistribuidora'],
+      group: ['idDistribuidora'],
+    });
+
+    // Iterar sobre as distribuidoras e atualizar o histórico para cada uma
+    for (const distribuidoraObj of distribuidoras) {
+      const quantDist = {};
+      const distribuidoraId = distribuidoraObj.idDistribuidora;
+      //console.log("\n\n\n distribuidoraOBJ: ", distribuidoraObj, "\n\n\n");
+      const usuariosPorDistribuidora = await Valor.findAll({
+        attributes: [
+          'nomeExibicao',
+          'idDistribuidora',
+          [Sequelize.fn('COUNT', Sequelize.col('nomeExibicao')), 'quantidade'],
+        ],
+        where: { idDistribuidora: distribuidoraId },
+        group: ['nomeExibicao', 'idDistribuidora'],
+      });
+      const licencas = await Valor.findAll({
+        where: { idDistribuidora: distribuidoraId }
+      });
+      //console.log("\n\n\n licencas: ", licencas, "\n\n\n");
+
+      const quantidadeUsuarios = usuariosPorDistribuidora.reduce((total, registro) => {
+        total[registro.nomeExibicao] = registro.get('quantidade');
+        return total;
+      }, {});
+      const totalUsuarios = Object.values(quantidadeUsuarios).reduce(
+        (total, quantidade) => total + quantidade,
+        0
+      );
+
+      let historicoMesDistribuidora = await HistoricoMesDistLicenca.findOne({
+        where: { distribuidora: distribuidoraId, mes: mesAtual, ano: anoAtual },
+      });
+
+      licencas.forEach((registro) => {
+      for (const coluna in registro.dataValues) {
+        if (typeof registro.dataValues[coluna] === 'boolean' && registro.dataValues[coluna] === true) {
+          quantDist[coluna] = (quantDist[coluna] || 0) + 1;
+        }
+        //console.log("\n\n\n quantDist", licencas, "\n\n\n");
+      }
+      });
+
+      if (!historicoMesDistribuidora) {
+        historicoMesDistribuidora = await HistoricoMesDistLicenca.create({
+          distribuidora: distribuidoraId,
+          mes: mesAtual,
+          ano: anoAtual,
+          usuarios: totalUsuarios,
+          ...quantDist,
+        });
+      } else {
+        historicoMesDistribuidora.update({
+          usuarios: totalUsuarios,
+          ...quantDist,
+        });
+      }
+    }
+    
+    console.log('Histórico de distribuidoras do mês atual atualizado com sucesso!');
+  } catch (error) {
+    console.error('Erro ao atualizar o histórico de distribuidoras do mês:', error);
+    throw error;
+  }
+}
+
 
 
 
@@ -246,6 +377,7 @@ let tamanho = 0;
     }
   }
   await atualizarHistoricoMesLicenca();
+  await atualizarHistoricoMesDistribuidora();
   console.log('Dados importados com sucesso!');
 }
 
