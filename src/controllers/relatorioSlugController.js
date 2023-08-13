@@ -4,6 +4,7 @@ const HistoricoLicenca = require('../models/historicoLicenca');
 const Licencas = require('../models/licencas');
 const db = require('../utils/database');
 const HistoricoMesLicenca = require('../models/historicoMesLicenca');
+const HistoricoDist = require('../models/historicoMesDistLicenca');
 const Func = require('./relatoriosController');
 const licenseMapping = {
     exchangeOnlinePlan1: 'Exchange Online (Plan 1)',
@@ -127,11 +128,45 @@ async function Distribuidoras() {
   }
 }
 
-async function QuantidadeDeLicencaDist() {
-  
+async function QuantidadeDeUserDistMesAtual() {
+  try {
+    const today = new Date();
+    const currentMonth = today.getMonth() + 1; // Os meses em JavaScript são baseados em zero
+
+    const distribuidoras = await HistoricoDist.findAll({
+      attributes: ['distribuidora', [Sequelize.fn('sum', Sequelize.col('usuarios')), 'total_usuarios']],
+      where: {
+        mes: currentMonth
+      },
+      group: ['distribuidora']
+    });
+
+    return distribuidoras;
+  } catch (error) {
+    console.error('Erro ao obter a quantidade de usuários por distribuidora:', error);
+    throw error;
+  }
 }
 
+async function QuantidadeDeUserDistMesPassado() {
+  try {
+    const today = new Date();
+    const currentMonth = today.getMonth(); // Os meses em JavaScript são baseados em zero
 
+    const distribuidoras = await HistoricoDist.findAll({
+      attributes: ['distribuidora', [Sequelize.fn('sum', Sequelize.col('usuarios')), 'total_usuarios']],
+      where: {
+        mes: currentMonth
+      },
+      group: ['distribuidora']
+    });
+
+    return distribuidoras;
+  } catch (error) {
+    console.error('Erro ao obter a quantidade de usuários por distribuidora:', error);
+    throw error;
+  }
+ }
 
 
 
@@ -139,4 +174,5 @@ module.exports = {
   QuantLicencaDistribuidoras,
   ValLicencaDist,
   Distribuidoras,
+  QuantidadeDeUserDistMesAtual,
 }

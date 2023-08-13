@@ -182,12 +182,15 @@ app.get('/teste', async (req, res) => {
     const teste = await relatorioSlugController.QuantLicencaDistribuidoras();
     const teste2 = await relatorioSlugController.ValLicencaDist();
     const Distribuidoras = await relatorioSlugController.Distribuidoras();
+    const quantLicencas = await relatorioSlugController.QuantidadeDeUserDistMesAtual();
+    const valoresAtuais = await relatorioController.ValoresAtuaisLicencas();
     const resultado = {
       teste,
       teste2,
       Distribuidoras,
+      quantLicencas,
+      valoresAtuais,
     };
-
     res.json(resultado);
   } catch (error) {
     console.error('Erro ao obter os valores calculados:', error);

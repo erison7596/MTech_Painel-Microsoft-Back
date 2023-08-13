@@ -134,11 +134,6 @@ const HistoricoMesDistLicenca = db.define('historico_mes_dist_licenca', {
     allowNull: false,
     defaultValue: false
   },
-  exchangeOnlinePlan1: {
-    type: Sequelize.INTEGER,
-    allowNull: false,
-    defaultValue: false
-  },
   microsoftBusinessCenter: {
     type: Sequelize.INTEGER,
     allowNull: false,
@@ -164,11 +159,6 @@ const HistoricoMesDistLicenca = db.define('historico_mes_dist_licenca', {
     allowNull: false,
     defaultValue: false
   },
-  microsoftPowerAutomateFree: {
-    type: Sequelize.INTEGER,
-    allowNull: false,
-    defaultValue: false
-  },
   microsoftStreamTrial: {
     type: Sequelize.INTEGER,
     allowNull: false,
@@ -185,11 +175,6 @@ const HistoricoMesDistLicenca = db.define('historico_mes_dist_licenca', {
     defaultValue: false
   },
   microsoftTeamsRoomsPro: {
-    type: Sequelize.INTEGER,
-    allowNull: false,
-    defaultValue: false
-  },
-  office365E3: {
     type: Sequelize.INTEGER,
     allowNull: false,
     defaultValue: false
