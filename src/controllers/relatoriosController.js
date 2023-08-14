@@ -659,22 +659,25 @@ async function CalcularValorMedioPorPessoaMes() {
 
 async function DiferencaValorMedioAtualMesPassado() {
   try {
-    const valorMedioPorPessoaPorMes = await CalcularValorMedioPorPessoaMes();
+    const quantLicencasPorMes = await SomaLicencasPorMes(); // Função SomaLicencasPorMes que você possui
+
     const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
+    const mesPassado = mesAtual - 1;
 
-    const usuariosMesAtual = valorMedioPorPessoaPorMes["2023"][mesAtual];
-    const usuariosMesAnterior = valorMedioPorPessoaPorMes["2023"][mesAtual - 1];
+    const usuariosMesAtual = quantLicencasPorMes["2023"][mesAtual];
+    const usuariosMesPassado = quantLicencasPorMes["2023"][mesPassado];
 
-    if (usuariosMesAnterior !== undefined && usuariosMesAnterior !== 0) {
-      const diferenca = ((usuariosMesAtual - usuariosMesAnterior) / usuariosMesAnterior) * 100;
+    if (usuariosMesPassado !== undefined && usuariosMesPassado !== 0) {
+      const diferenca = ((usuariosMesAtual - usuariosMesPassado) / usuariosMesPassado) * 100;
       return parseFloat(diferenca.toFixed(2));
     } else {
       return 0;
     }
-  }catch (error) {
+  } catch (error) {
     throw new Error('Erro ao calcular a diferença do valor médio atual com o passado: ' + error.message);
   }
 }
+
 
 
 
@@ -694,5 +697,6 @@ module.exports = {
   DiferencaLicencaAtualComPassado,
   DiferencaLicecasAtuaisEAnteriores,
   DiferencaValorMedioAtualMesPassado,
-  ValoresAtuaisLicencas
+  ValoresAtuaisLicencas,
+  HistoricoValLicencas
 };

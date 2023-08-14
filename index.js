@@ -183,13 +183,47 @@ app.get('/teste', async (req, res) => {
     const teste2 = await relatorioSlugController.ValLicencaDist();
     const Distribuidoras = await relatorioSlugController.Distribuidoras();
     const quantLicencas = await relatorioSlugController.QuantidadeDeUserDistMesAtual();
+    const quantLicencasMesPassado = await relatorioSlugController.QuantidadeDeUserDistMesPassado();
+    const diferencaUsuarioAtualComPassado = await relatorioSlugController.DiferencaPercentualUsuarios();
     const valoresAtuais = await relatorioController.ValoresAtuaisLicencas();
+    const listarLicenca = await relatorioSlugController.LicencasDistAtual();
+    const LicencasAgrupadas = await relatorioSlugController.LicencasAgrupadasPorAnoMesDist();
+    const valoresTotaisMensal = await relatorioSlugController.HistValLicencas();
+    const quantUserMes = await relatorioSlugController.QuantUsuarioPorMes();
+    const quatidadeLicencasMes = await relatorioSlugController.SomaLicencasPorMes();
+    const diferencaLicecasAtuaisEAnteriores = await relatorioSlugController.DiferencaLicecasAtuaisEAnteriores();
+    const licencasPorMes = await relatorioSlugController.ExtrairDadosMeses();
+    const LicencaAtual = await relatorioSlugController.QuantidadeLicencaAtualDist();
+    const licencaPassado = await relatorioSlugController.QuantidadeLicencaMesPassadolDist();
+    const somaLicencas = await relatorioSlugController.sumLicenseValues();
+    const custoTotal = await relatorioSlugController.CustoTotalMesAtual();
+    const valorPassado = await relatorioSlugController.ValorMesPassado();
+    const somaMesPassado = await relatorioSlugController.SomaLicencasMesPassado();
+    const custoTotalMesPassado = await relatorioSlugController.CustoTotalMesAtualMesPassado();
+    const diferencaDoMesAtualComPassado = await relatorioSlugController.DiferencaPercentuaValorTotal();
     const resultado = {
       teste,
       teste2,
       Distribuidoras,
-      quantLicencas,
+      quantLicencas, //funcionando certo
+      quantLicencasMesPassado,
+      diferencaUsuarioAtualComPassado, //funcionando certo
       valoresAtuais,
+      listarLicenca,
+      LicencasAgrupadas,
+      valoresTotaisMensal,
+      quantUserMes,
+      quatidadeLicencasMes, //funcionando certo
+      diferencaLicecasAtuaisEAnteriores, //funcionando certo
+      licencasPorMes,
+      LicencaAtual,
+      licencaPassado,
+      somaLicencas,
+      custoTotal, //funcionando certo
+      valorPassado,
+      somaMesPassado,
+      custoTotalMesPassado, //oskey
+      diferencaDoMesAtualComPassado,
     };
     res.json(resultado);
   } catch (error) {
