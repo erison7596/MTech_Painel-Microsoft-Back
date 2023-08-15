@@ -659,13 +659,12 @@ async function CalcularValorMedioPorPessoaMes() {
 
 async function DiferencaValorMedioAtualMesPassado() {
   try {
-    const quantLicencasPorMes = await SomaLicencasPorMes(); // Função SomaLicencasPorMes que você possui
+    const quantLicencasPorMes = await CalcularValorMedioPorPessoaMes(); 
 
-    const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
-    const mesPassado = mesAtual - 1;
+    const mesAtual = new Date().getMonth() + 1; 
 
     const usuariosMesAtual = quantLicencasPorMes["2023"][mesAtual];
-    const usuariosMesPassado = quantLicencasPorMes["2023"][mesPassado];
+    const usuariosMesPassado = quantLicencasPorMes["2023"][mesAtual -1];
 
     if (usuariosMesPassado !== undefined && usuariosMesPassado !== 0) {
       const diferenca = ((usuariosMesAtual - usuariosMesPassado) / usuariosMesPassado) * 100;

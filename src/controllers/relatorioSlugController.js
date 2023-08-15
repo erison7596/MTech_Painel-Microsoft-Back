@@ -370,7 +370,7 @@ async function DiferencaLicecasAtuaisEAnteriores() {
 async function ExtrairDadosMeses() {
   try {
     const licencasAgrupadas = await LicencasAgrupadasPorAnoMesDist();
-    const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
+    const mesAtual = new Date().getMonth() + 1;
     const mesAnterior = mesAtual - 1;
 
     const dadosMesAtual = licencasAgrupadas["2023"][mesAtual.toString()];
@@ -381,11 +381,21 @@ async function ExtrairDadosMeses() {
       [mesAnterior.toString()]: {}
     };
 
-    for (const distribuidora in dadosMesAtual) {
-      resultado[mesAtual.toString()][distribuidora] = { ...dadosMesAtual[distribuidora] };
-      resultado[mesAnterior.toString()][distribuidora] = { ...dadosMesAnterior[distribuidora] };
+    const ordenarPorQuantidade = (dados) => {
+      const planosOrdenados = Object.entries(dados).sort((a, b) => b[1] - a[1]);
+      const planosOrdenadosObj = {};
+      for (const [plano, quantidade] of planosOrdenados) {
+        planosOrdenadosObj[plano] = quantidade;
+      }
+      return planosOrdenadosObj;
+    };
 
-      // Remove o campo "usuarios"
+    const distribuidoras = Object.keys(dadosMesAtual);
+
+    for (const distribuidora of distribuidoras) {
+      resultado[mesAtual.toString()][distribuidora] = ordenarPorQuantidade(dadosMesAtual[distribuidora]);
+      resultado[mesAnterior.toString()][distribuidora] = ordenarPorQuantidade(dadosMesAnterior[distribuidora]);
+       // Remove o campo "usuarios"
       delete resultado[mesAtual.toString()][distribuidora]["usuarios"];
       delete resultado[mesAnterior.toString()][distribuidora]["usuarios"];
     }
@@ -396,6 +406,7 @@ async function ExtrairDadosMeses() {
     return {};
   }
 }
+
 
 async function QuantidadeLicencaAtualDist() {
   try {
@@ -426,25 +437,37 @@ async function sumLicenseValues() {
     const values = await ValLicencaDist();
     const summedLicenses = {};
 
-  for (const location in licenses) {
-    const locationSum = {};
-    for (const licenseKey in licenses[location]) {
-      const mappedLicense = licenseMapping[licenseKey];
-      const licenseValue = licenses[location][licenseKey];
+    for (const location in licenses) {
+      const locationSum = {};
+      for (const licenseKey in licenses[location]) {
+        const mappedLicense = licenseMapping[licenseKey];
+        const licenseValue = licenses[location][licenseKey];
 
-      if (mappedLicense && values[mappedLicense]) {
-        locationSum[licenseKey] = licenseValue * values[mappedLicense];
+        if (mappedLicense && values[mappedLicense]) {
+          locationSum[licenseKey] = licenseValue * values[mappedLicense];
+        }
       }
+      summedLicenses[location] = locationSum;
     }
-    summedLicenses[location] = locationSum;
-  }
 
-  return summedLicenses;
-  }catch(error) {
+    // Ordenar cada localização por quantidade
+    for (const location in summedLicenses) {
+      const sortedLicenses = Object.entries(summedLicenses[location])
+        .sort((a, b) => b[1] - a[1])  // Ordenar por quantidade descendente
+        .reduce((acc, [license, totalValue]) => {
+          acc[license] = totalValue;
+          return acc;
+        }, {});
+      summedLicenses[location] = sortedLicenses;
+    }
+
+    return summedLicenses;
+  } catch(error) {
     console.error('Erro ao obter dados das licenças:', error);
     return {};
   }
 }
+
 
 async function CustoTotalMesAtual() {
   try {
@@ -551,8 +574,154 @@ async function DiferencaPercentuaValorTotal() {
   }
 }
 
+async function valorMedioPorUsuarioAtual() {
+  try {
+    const custoTotalPorDistribuidora  = await CustoTotalMesAtual();
+    const quantidadeUsuariosPorDistribuidora  = await QuantidadeDeUserDistMesAtual();
+    const mediaCustoPorUsuario = {};
+
+    Object.keys(custoTotalPorDistribuidora).forEach(distribuidora => {
+      const custoTotal = custoTotalPorDistribuidora[distribuidora];
+      const quantidadeUsuarios = parseFloat(quantidadeUsuariosPorDistribuidora[distribuidora]);
+
+      if (!isNaN(quantidadeUsuarios) && quantidadeUsuarios > 0) {
+        const media = custoTotal / quantidadeUsuarios;
+        // Formata o resultado para ter duas casas decimais
+        const formattedMedia = parseFloat(media.toFixed(2));
+        mediaCustoPorUsuario[distribuidora] = formattedMedia;
+      } else {
+        mediaCustoPorUsuario[distribuidora] = null;
+      }
+    });
+
+    return mediaCustoPorUsuario;
+
+  } catch (error) {
+    console.error('Erro ao obter dados das licenças:', error);
+    return {};
+  }
+}
+
+async function valorMedioPorUsuarioPassado() {
+  try {
+     const custoTotalPorDistribuidora  = await CustoTotalMesAtualMesPassado();
+    const quantidadeUsuariosPorDistribuidora  = await QuantidadeDeUserDistMesPassado();
+    const mediaCustoPorUsuario = {};
+
+    Object.keys(custoTotalPorDistribuidora).forEach(distribuidora => {
+      const custoTotal = custoTotalPorDistribuidora[distribuidora];
+      const quantidadeUsuarios = parseFloat(quantidadeUsuariosPorDistribuidora[distribuidora]);
+
+      if (!isNaN(quantidadeUsuarios) && quantidadeUsuarios > 0) {
+        const media = custoTotal / quantidadeUsuarios;
+        // Formata o resultado para ter duas casas decimais
+        const formattedMedia = parseFloat(media.toFixed(2));
+        mediaCustoPorUsuario[distribuidora] = formattedMedia;
+      } else {
+        mediaCustoPorUsuario[distribuidora] = null;
+      }
+    });
+
+    return mediaCustoPorUsuario;
+  }catch(error) {
+    console.error('Erro ao obter dados das licenças:', error);
+    return {};
+  }
+}
 
 
+async function DiferencaPercentuaMediaTotal() {
+  try {
+    const quantLicencasMesAtual = await valorMedioPorUsuarioAtual();
+    const quantLicencasMesPassado = await valorMedioPorUsuarioPassado();
+    const diffPercentage = {};
+
+    Object.keys(quantLicencasMesAtual).forEach(distribuidora => {
+      const licencasAtual = parseFloat(quantLicencasMesAtual[distribuidora]);
+      const licencasPassado = quantLicencasMesPassado[distribuidora];
+
+      if (licencasPassado !== undefined) {
+        const percentageDiff = ((licencasAtual - licencasPassado) / licencasPassado) * 100;
+        // Formata o resultado para ter duas casas decimais
+        const formattedPercentageDiff = parseFloat(percentageDiff.toFixed(2));
+        diffPercentage[distribuidora] = formattedPercentageDiff;
+      } else {
+        diffPercentage[distribuidora] = null;
+      }
+    });
+
+    return diffPercentage;
+  } catch (error) {
+    console.error('Erro ao obter dados das licenças:', error);
+    return {};
+  }
+}
+
+async function calcularValoresPorMes() {
+    const resultado = {};
+    const licencasAgrupadas = await LicencasAgrupadasPorAnoMesDist();
+    const valoresTotaisMensal = await HistValLicencas();
+
+    for (const ano in licencasAgrupadas) {
+        if (!resultado[ano]) {
+            resultado[ano] = {};
+        }
+
+        for (const mes in licencasAgrupadas[ano]) {
+            if (!resultado[ano][mes]) {
+                resultado[ano][mes] = {};
+            }
+
+            for (const distribuidora in licencasAgrupadas[ano][mes]) {
+                if (!resultado[ano][mes][distribuidora]) {
+                    resultado[ano][mes][distribuidora] = {};
+                }
+
+                for (const licenca in licencasAgrupadas[ano][mes][distribuidora]) {
+                    const licencaNome = licenseMapping[licenca];
+                    if (licencaNome && valoresTotaisMensal[ano] && valoresTotaisMensal[ano][mes] && valoresTotaisMensal[ano][mes][licencaNome]) {
+                        const quantidade = licencasAgrupadas[ano][mes][distribuidora][licenca];
+                        const valorLicenca = valoresTotaisMensal[ano][mes][licencaNome];
+                        const valorCalculado = quantidade * valorLicenca;
+                        
+                        if (licencaNome !== 'usuarios') {
+                            resultado[ano][mes][distribuidora][licencaNome] = valorCalculado;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return resultado;
+}
+
+
+async function calcularValoresTotaisPorMes() {
+  const dados = await calcularValoresPorMes(); // Chame sua função para obter os valores
+const resultado = {};
+
+    for (const ano in dados) {
+        resultado[ano] = {};
+
+        for (const mes in dados[ano]) {
+            resultado[ano][mes] = {};
+
+            for (const distribuidora in dados[ano][mes]) {
+                let total = 0;
+                const distribuidoraValores = dados[ano][mes][distribuidora];
+
+                for (const produto in distribuidoraValores) {
+                    total += distribuidoraValores[produto];
+                }
+
+                resultado[ano][mes][distribuidora] = total;
+            }
+        }
+    }
+
+    return resultado;
+}
 
 module.exports = {
   QuantLicencaDistribuidoras,
@@ -576,4 +745,9 @@ module.exports = {
   SomaLicencasMesPassado,
   CustoTotalMesAtualMesPassado,
   DiferencaPercentuaValorTotal,
+  valorMedioPorUsuarioAtual,
+  valorMedioPorUsuarioPassado,
+  DiferencaPercentuaMediaTotal,
+  calcularValoresPorMes,
+  calcularValoresTotaisPorMes,
 }
