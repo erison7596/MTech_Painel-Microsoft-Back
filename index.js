@@ -12,6 +12,7 @@ const bodyParser = require('body-parser');
 const Sequelize = require('sequelize');
 const relatorioController = require('./src/controllers/relatoriosController');
 const relatorioSlugController = require('./src/controllers/relatorioSlugController');
+const userController = require('./src/controllers/userController');
 
 const app = express();
 const port = 4000;
@@ -83,9 +84,12 @@ app.get('/', async (req, res) => {
   }
 }); //finalizado 
 
-app.get('/listar', async (req, res) => {
+app.get('/usuarios', async (req, res) => {
   try {
-    const dados = await Valor.findAll();
+    const user = await userController.getValoresComColunasTrue();
+    const dados = {
+      user
+    }
     res.json(dados);
   } catch (error) {
     console.error('Erro ao listar os dados:', error);
@@ -181,61 +185,31 @@ app.get('/distribuidora/:slug', async (req, res) => {
   }
 });
 
+
+app.get('/distribuidora/:slug/usuarios', async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const distribuidora = await relatorioSlugController.getIdDistribuidoraFromSlug(slug);
+    const userDist = await userController.getValUserDist(distribuidora);
+    const resultado = {
+      userDist
+    };
+    res.json(resultado);
+  } catch (error) {
+    console.error('Erro ao obter os valores calculados:', error);
+    res.status(500).json({ error: 'Erro ao obter os valores calculados' });
+  }
+});
+
 app.get('/teste', async (req, res) => {
   try {
-    const calcularHistoricoCustoTotalAno = await relatorioSlugController.reformatData();
-    const teste2 = await relatorioSlugController.calcularValoresTotaisPorMes();
-    const Distribuidoras = await relatorioSlugController.Distribuidoras();
-    const quantidadeUsuarios = await relatorioSlugController.QuantidadeDeUserDistMesAtual();
-    const quantLicencasMesPassado = await relatorioSlugController.QuantidadeDeUserDistMesPassado();
-    const diferencaUsuarioAtualComPassado = await relatorioSlugController.DiferencaPercentualUsuarios();
-    const valoresAtuais = await relatorioController.ValoresAtuaisLicencas();
-    const listarLicenca = await relatorioSlugController.LicencasDistAtual();
-    const LicencasAgrupadas = await relatorioSlugController.LicencasAgrupadasPorAnoMesDist();
-    const valoresTotaisMensal = await relatorioSlugController.HistValLicencas();
-    const quantUserMes = await relatorioSlugController.QuantUsuarioPorMes();
-    const quatidadeLicencasMes = await relatorioSlugController.QuantlicencasAtual();
-    const diferencaLicecasAtuaisEAnteriores = await relatorioSlugController.DiferencaLicecasAtuaisEAnteriores();
-    const licencasPorMes = await relatorioSlugController.ExtrairDadosMeses();
-    const listarLicencaOrdenada = await relatorioSlugController.QuantidadeLicencaAtualDist();
-    const licencaPassado = await relatorioSlugController.QuantidadeLicencaMesPassadolDist();
-    const valorTotalLicencasOrdenado = await relatorioSlugController.sumLicenseValues();
-    const custoTotal = await relatorioSlugController.CustoTotalMesAtual();
-    const valorPassado = await relatorioSlugController.ValorMesPassado();
-    const somaMesPassado = await relatorioSlugController.SomaLicencasMesPassado();
-    const custoTotalMesPassado = await relatorioSlugController.CustoTotalMesAtualMesPassado();
-    const diferencaDoMesAtualComPassado = await relatorioSlugController.DiferencaPercentuaValorTotal();
-    const valorMedioAtual = await relatorioSlugController.valorMedioPorUsuarioAtual();
-    const valorMedioPAssado = await relatorioSlugController.valorMedioPorUsuarioPassado();
-    const diferencaValorMedioAtualMesPassado = await relatorioSlugController.DiferencaPercentuaMediaTotal();
-    const licencasPorAno = await relatorioController.calcularValorTotalDeCadaLicencaAno();    
+    const user = await userController.getValoresComColunasTrue();
+    const valorAtual = await relatorioController.ValoresAtuaisLicencas();
+    const userDist = await userController.getValUserDist("PALACIO MATRIZ");
     const resultado = {
-      calcularHistoricoCustoTotalAno,
-     // teste2, //fazer um map para corrigir o nome
-      Distribuidoras, //aqui é da aba distribuidoras 
-      quantidadeUsuarios, //funcionando certo 
-      //quantLicencasMesPassado,
-      diferencaUsuarioAtualComPassado, //funcionando certo
-      //valoresAtuais,
-      //listarLicenca,
-      //LicencasAgrupadas, //com essa <>><>
-      //valoresTotaisMensal, //fazer o historico anual dessa aqui
-      quantUserMes,
-      quatidadeLicencasMes, 
-      diferencaLicecasAtuaisEAnteriores, //funcionando certo
-     // licencasPorMes,
-     listarLicencaOrdenada,
-     // licencaPassado,
-      valorTotalLicencasOrdenado, //funcionando certo
-      custoTotal, //funcionando certo
-     // valorPassado,
-      //somaMesPassado,
-      custoTotalMesPassado, //oskey
-      diferencaDoMesAtualComPassado,
-      valorMedioAtual,
-      //valorMedioPAssado,
-      diferencaValorMedioAtualMesPassado,
-      licencasPorAno,
+      user,
+      valorAtual,
+      userDist
     };
     res.json(resultado);
   } catch (error) {
