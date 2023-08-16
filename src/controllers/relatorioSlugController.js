@@ -658,48 +658,54 @@ async function DiferencaPercentuaMediaTotal() {
 }
 
 async function calcularValoresPorMes() {
+  try {
     const resultado = {};
     const licencasAgrupadas = await LicencasAgrupadasPorAnoMesDist();
     const valoresTotaisMensal = await HistValLicencas();
 
     for (const ano in licencasAgrupadas) {
-        if (!resultado[ano]) {
-            resultado[ano] = {};
+      if (!resultado[ano]) {
+        resultado[ano] = {};
+      }
+
+      for (const mes in licencasAgrupadas[ano]) {
+        if (!resultado[ano][mes]) {
+          resultado[ano][mes] = {};
         }
 
-        for (const mes in licencasAgrupadas[ano]) {
-            if (!resultado[ano][mes]) {
-                resultado[ano][mes] = {};
-            }
+        for (const distribuidora in licencasAgrupadas[ano][mes]) {
+          if (!resultado[ano][mes][distribuidora]) {
+            resultado[ano][mes][distribuidora] = {};
+          }
 
-            for (const distribuidora in licencasAgrupadas[ano][mes]) {
-                if (!resultado[ano][mes][distribuidora]) {
-                    resultado[ano][mes][distribuidora] = {};
-                }
-
-                for (const licenca in licencasAgrupadas[ano][mes][distribuidora]) {
-                    const licencaNome = licenseMapping[licenca];
-                    if (licencaNome && valoresTotaisMensal[ano] && valoresTotaisMensal[ano][mes] && valoresTotaisMensal[ano][mes][licencaNome]) {
-                        const quantidade = licencasAgrupadas[ano][mes][distribuidora][licenca];
-                        const valorLicenca = valoresTotaisMensal[ano][mes][licencaNome];
-                        const valorCalculado = quantidade * valorLicenca;
+          for (const licenca in licencasAgrupadas[ano][mes][distribuidora]) {
+            const licencaNome = licenseMapping[licenca];
+            if (licencaNome && valoresTotaisMensal[ano] && valoresTotaisMensal[ano][mes] && valoresTotaisMensal[ano][mes][licencaNome]) {
+              const quantidade = licencasAgrupadas[ano][mes][distribuidora][licenca];
+              const valorLicenca = valoresTotaisMensal[ano][mes][licencaNome];
+              const valorCalculado = quantidade * valorLicenca;
                         
-                        if (licencaNome !== 'usuarios') {
-                            resultado[ano][mes][distribuidora][licencaNome] = valorCalculado;
-                        }
-                    }
-                }
+              if (licencaNome !== 'usuarios') {
+                resultado[ano][mes][distribuidora][licencaNome] = valorCalculado;
+              }
             }
+          }
         }
+      }
     }
 
     return resultado;
+  } catch (error) {
+    console.error('Erro ao obter dados das licenças:', error);
+    return {}
+  }
 }
 
 
 async function calcularValoresTotaisPorMes() {
+  try {
   const dados = await calcularValoresPorMes(); // Chame sua função para obter os valores
-const resultado = {};
+  const resultado = {};
 
     for (const ano in dados) {
         resultado[ano] = {};
@@ -721,6 +727,61 @@ const resultado = {};
     }
 
     return resultado;
+  }catch(error) {
+    console.error('Erro ao obter dados das licenças:', error);
+    return {};
+  }
+}
+
+
+async function reformatData() {
+  try {
+      const data = await calcularValoresTotaisPorMes();
+    const reformattedData = {};
+
+    for (const year in data) {
+        for (const month in data[year]) {
+            for (const distributor in data[year][month]) {
+                const amount = data[year][month][distributor];
+
+                if (!reformattedData[distributor]) {
+                    reformattedData[distributor] = {};
+                }
+
+                if (!reformattedData[distributor][year]) {
+                    reformattedData[distributor][year] = [];
+                }
+
+                reformattedData[distributor][year].push({
+                    mes: parseInt(month),
+                    Total: amount
+                });
+            }
+        }
+    }
+
+    return reformattedData;
+  } catch (error) { 
+    console.error('Erro ao obter dados das licenças:', error);
+    return {};
+  }
+}
+async function getIdDistribuidoraFromSlug(slug) {
+  const distribuidoraa = await Distribuidoras();
+  const distribuidora = distribuidoraa.find(distribuidora => distribuidora.slug === slug);
+    return distribuidora ? distribuidora.idDistribuidora : null;
+}
+
+async function QuantlicencasAtual() {
+  try {
+    const anoAtual = new Date().getFullYear();
+    const mesAtual = new Date().getMonth() + 1;
+    const quantLicencasMesAtual = (await SomaLicencasPorMes())[anoAtual][mesAtual];
+    return quantLicencasMesAtual;
+  } catch (error) { 
+    console.error('Erro ao obter dados das licenças:', error);
+    return {};
+  }
 }
 
 module.exports = {
@@ -750,4 +811,7 @@ module.exports = {
   DiferencaPercentuaMediaTotal,
   calcularValoresPorMes,
   calcularValoresTotaisPorMes,
+  reformatData,
+  getIdDistribuidoraFromSlug,
+  QuantlicencasAtual,
 }

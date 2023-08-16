@@ -145,29 +145,33 @@ app.get('/distribuidoras', async (req, res) => {
 app.get('/distribuidora/:slug', async (req, res) => {
   try {
     const { slug } = req.params;
-
-    const mediaIdCustoLicenca = await Valor.findAll({
-      where: { slug: slug },
-      attributes: [
-        [Valor.sequelize.fn('AVG', Valor.sequelize.col('idCustoLicenca')), 'mediaIdCustoLicenca']
-      ],
-    });
-
-    // deixar a medica com duas casas decimais
-    mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca = mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca.toFixed(2);
-
-    const quantidadeNomeExibicao = await Valor.count({
-      where: { slug: slug },
-      distinct: 'nomeExibicao'
-    });
-
-    const quantidadeLicencas = await Valor.count({ where: { slug: slug }, distinct: 'licencas' });
-
+    const distribuidora = await relatorioSlugController.getIdDistribuidoraFromSlug(slug);
+    const calcularHistoricoCustoTotalAno = (await relatorioSlugController.reformatData())[distribuidora];
+    const custoTotal = (await relatorioSlugController.CustoTotalMesAtual())[distribuidora];
+    const listarLicencaOrdenada = (await relatorioSlugController.QuantidadeLicencaAtualDist())
+    [distribuidora];
+    const quantidadeLicencasAtivas = (await relatorioSlugController.QuantlicencasAtual())[distribuidora];
+    const quantidadeUsuarios = (await relatorioSlugController.QuantidadeDeUserDistMesAtual())[distribuidora];
+    const valorMedioPorUsuario = (await relatorioSlugController.valorMedioPorUsuarioAtual())[distribuidora];
+    const valorTotalLicencasOrdenado = (await relatorioSlugController.sumLicenseValues())[distribuidora];
+    const licencasPorAno = await relatorioController.calcularValorTotalDeCadaLicencaAno();
+    const diferencaDoMesAtualComPassado = (await relatorioSlugController.DiferencaPercentuaValorTotal())[distribuidora];
+    const diferencaUsuarioAtualComPassado = (await relatorioSlugController.DiferencaPercentualUsuarios())[distribuidora];
+    const diferencaLicecasAtuaisEAnteriores = (await relatorioSlugController.DiferencaLicecasAtuaisEAnteriores())[distribuidora];
+    const diferencaValorMedioAtualMesPassado = (await relatorioSlugController.DiferencaPercentuaMediaTotal())[distribuidora];
     const resultado = {
-      mediaIdCustoLicenca: mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca,
-      quantidadeNomeExibicao,
-      quantidadeLicencas,
-      divisaoLicencasPorMedia: mediaIdCustoLicenca[0].dataValues.mediaIdCustoLicenca / quantidadeLicencas,
+      custoTotal,
+      calcularHistoricoCustoTotalAno,
+      listarLicencaOrdenada,
+      quantidadeLicencasAtivas,
+      quantidadeUsuarios,
+      valorMedioPorUsuario,
+      valorTotalLicencasOrdenado,
+      licencasPorAno,
+      diferencaDoMesAtualComPassado,
+      diferencaUsuarioAtualComPassado,
+      diferencaLicecasAtuaisEAnteriores,
+      diferencaValorMedioAtualMesPassado
     };
 
     res.json(resultado);
@@ -179,7 +183,7 @@ app.get('/distribuidora/:slug', async (req, res) => {
 
 app.get('/teste', async (req, res) => {
   try {
-    const teste = await relatorioSlugController.calcularValoresPorMes();
+    const calcularHistoricoCustoTotalAno = await relatorioSlugController.reformatData();
     const teste2 = await relatorioSlugController.calcularValoresTotaisPorMes();
     const Distribuidoras = await relatorioSlugController.Distribuidoras();
     const quantidadeUsuarios = await relatorioSlugController.QuantidadeDeUserDistMesAtual();
@@ -190,7 +194,7 @@ app.get('/teste', async (req, res) => {
     const LicencasAgrupadas = await relatorioSlugController.LicencasAgrupadasPorAnoMesDist();
     const valoresTotaisMensal = await relatorioSlugController.HistValLicencas();
     const quantUserMes = await relatorioSlugController.QuantUsuarioPorMes();
-    const quatidadeLicencasMes = await relatorioSlugController.SomaLicencasPorMes();
+    const quatidadeLicencasMes = await relatorioSlugController.QuantlicencasAtual();
     const diferencaLicecasAtuaisEAnteriores = await relatorioSlugController.DiferencaLicecasAtuaisEAnteriores();
     const licencasPorMes = await relatorioSlugController.ExtrairDadosMeses();
     const listarLicencaOrdenada = await relatorioSlugController.QuantidadeLicencaAtualDist();
@@ -206,8 +210,8 @@ app.get('/teste', async (req, res) => {
     const diferencaValorMedioAtualMesPassado = await relatorioSlugController.DiferencaPercentuaMediaTotal();
     const licencasPorAno = await relatorioController.calcularValorTotalDeCadaLicencaAno();    
     const resultado = {
-      //teste,
-      teste2, //fazer um map para corrigir o nome
+      calcularHistoricoCustoTotalAno,
+     // teste2, //fazer um map para corrigir o nome
       Distribuidoras, //aqui é da aba distribuidoras 
       quantidadeUsuarios, //funcionando certo 
       //quantLicencasMesPassado,
@@ -217,7 +221,7 @@ app.get('/teste', async (req, res) => {
       //LicencasAgrupadas, //com essa <>><>
       //valoresTotaisMensal, //fazer o historico anual dessa aqui
       quantUserMes,
-      //quatidadeLicencasMes, 
+      quatidadeLicencasMes, 
       diferencaLicecasAtuaisEAnteriores, //funcionando certo
      // licencasPorMes,
      listarLicencaOrdenada,
