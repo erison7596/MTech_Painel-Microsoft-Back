@@ -578,10 +578,12 @@ async function DiferencaDoMesAtualComPassado() {
     console.log("\n\n\n Diferença do mês atual com o passado: " + diferenca + "%\n\n\n");
     
     // Retornar a diferença como float com duas casas decimais
-    if (isNaN(diferenca)) {
-      return 0.00;
+    if (mesPassado !== undefined && mesPassado !== 0) {
+      const diferenca = ((mesAtual - mesPassado) / mesPassado) * 100;
+      return parseFloat(diferenca.toFixed(2));
+    } else {
+      return 0;
     }
-    return diferenca.toFixed(2);
     
   } catch (error) {
     throw new Error('Erro ao calcular a diferença do mês atual com o passado: ' + error.message);
