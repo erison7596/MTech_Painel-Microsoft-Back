@@ -201,22 +201,38 @@ app.get('/distribuidora/:slug/usuarios', async (req, res) => {
   }
 });
 
-app.get('/teste', async (req, res) => {
+app.post('/teste', async (req, res) => {
+  const { excelData } = req.body;
+
+  console.log('Recebendo requisição POST em /teste');
+  
+  if (!excelData) {
+    console.log('Dados do Excel ausentes na requisição.');
+    return res.status(400).json({ error: 'No Excel data provided.' });
+  }
+
   try {
-    const user = await userController.getValoresComColunasTrue();
-    const valorAtual = await relatorioController.ValoresAtuaisLicencas();
-    const userDist = await userController.getValUserDist("PALACIO MATRIZ");
-    const resultado = {
-      user,
-      valorAtual,
-      userDist
-    };
-    res.json(resultado);
+    console.log('Processando dados do Excel...');
+
+    const arrayBuffer = new Uint8Array(Buffer.from(excelData, 'base64'));
+    const workbook = xlsx.read(arrayBuffer, { type: 'buffer' });
+    const worksheet = workbook.Sheets['ESPECÍFICO'];
+
+    valorController.importData(worksheet)
+      .then(() => {
+        console.log('Dados importados com sucesso!');
+        res.send('Dados importados com sucesso!');
+      })
+      .catch((error) => {
+        console.error('Erro ao importar dados:', error);
+        res.status(500).send('Erro ao importar dados');
+      });
   } catch (error) {
-    console.error('Erro ao obter os valores calculados:', error);
-    res.status(500).json({ error: 'Erro ao obter os valores calculados' });
+    console.error('Erro ao processar os dados do Excel:', error);
+    res.status(500).send('Erro ao processar os dados do Excel');
   }
 });
+
 
 
 app.listen(port, () => {
