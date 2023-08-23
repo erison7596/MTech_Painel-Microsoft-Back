@@ -419,6 +419,36 @@ async function QuantidadeLicencaAtualDist() {
   }
 }
 
+async function QuantlicencasAtualMapping() { 
+try {
+    const mesAtual = new Date().getMonth() + 1;
+    const data = await ExtrairDadosMeses();
+    const valores = data[mesAtual.toString()];
+
+    const dadosComNomesAlterados = {};
+
+    for (const local in valores) {
+      const licencasOriginais = valores[local];
+      const licencasAlteradas = {};
+
+      for (const licenca in licencasOriginais) {
+        if (licenseMapping[licenca]) {
+          licencasAlteradas[licenseMapping[licenca]] = licencasOriginais[licenca];
+        } else {
+          licencasAlteradas[licenca] = licencasOriginais[licenca];
+        }
+      }
+
+      dadosComNomesAlterados[local] = licencasAlteradas;
+    }
+
+    return dadosComNomesAlterados;
+  } catch (error) {
+    console.error('Erro ao obter dados das licenças:', error);
+    return {};
+  }
+}
+
 async function QuantidadeLicencaMesPassadolDist() {
   try {
     const mesAtual = new Date().getMonth();
@@ -463,6 +493,44 @@ async function sumLicenseValues() {
 
     return summedLicenses;
   } catch(error) {
+    console.error('Erro ao obter dados das licenças:', error);
+    return {};
+  }
+}
+
+
+async function sumLicenseValuesmapping() {
+  try {
+    const licenses = await QuantidadeLicencaAtualDist();
+    const values = await ValLicencaDist();
+    const summedLicenses = {};
+
+    for (const location in licenses) {
+      const locationSum = {};
+      for (const licenseKey in licenses[location]) {
+        const mappedLicense = licenseMapping[licenseKey];
+        const licenseValue = licenses[location][licenseKey];
+
+        if (mappedLicense && values[mappedLicense]) {
+          locationSum[mappedLicense] = licenseValue * values[mappedLicense];
+        }
+      }
+      summedLicenses[location] = locationSum;
+    }
+
+    // Ordenar cada localização por quantidade
+    for (const location in summedLicenses) {
+      const sortedLicenses = Object.entries(summedLicenses[location])
+        .sort((a, b) => b[1] - a[1])  // Ordenar por quantidade descendente
+        .reduce((acc, [license, totalValue]) => {
+          acc[license] = totalValue;
+          return acc;
+        }, {});
+      summedLicenses[location] = sortedLicenses;
+    }
+
+    return summedLicenses;
+  } catch (error) {
     console.error('Erro ao obter dados das licenças:', error);
     return {};
   }
@@ -814,4 +882,6 @@ module.exports = {
   reformatData,
   getIdDistribuidoraFromSlug,
   QuantlicencasAtual,
+  QuantlicencasAtualMapping,
+  sumLicenseValuesmapping
 }

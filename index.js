@@ -152,12 +152,12 @@ app.get('/distribuidora/:slug', async (req, res) => {
     const distribuidora = await relatorioSlugController.getIdDistribuidoraFromSlug(slug);
     const calcularHistoricoCustoTotalAno = (await relatorioSlugController.reformatData())[distribuidora];
     const custoTotal = (await relatorioSlugController.CustoTotalMesAtual())[distribuidora];
-    const listarLicencaOrdenada = (await relatorioSlugController.QuantidadeLicencaAtualDist())
+    const listarLicencaOrdenada = (await relatorioSlugController.QuantlicencasAtualMapping())
     [distribuidora];
     const quantidadeLicencasAtivas = (await relatorioSlugController.QuantlicencasAtual())[distribuidora];
     const quantidadeUsuarios = (await relatorioSlugController.QuantidadeDeUserDistMesAtual())[distribuidora];
     const valorMedioPorUsuario = (await relatorioSlugController.valorMedioPorUsuarioAtual())[distribuidora];
-    const valorTotalLicencasOrdenado = (await relatorioSlugController.sumLicenseValues())[distribuidora];
+    const valorTotalLicencasOrdenado = (await relatorioSlugController.sumLicenseValuesmapping())[distribuidora];
     const licencasPorAno = await relatorioController.calcularValorTotalDeCadaLicencaAno();
     const diferencaDoMesAtualComPassado = (await relatorioSlugController.DiferencaPercentuaValorTotal())[distribuidora];
     const diferencaUsuarioAtualComPassado = (await relatorioSlugController.DiferencaPercentualUsuarios())[distribuidora];
@@ -190,9 +190,9 @@ app.get('/distribuidora/:slug/usuarios', async (req, res) => {
   try {
     const { slug } = req.params;
     const distribuidora = await relatorioSlugController.getIdDistribuidoraFromSlug(slug);
-    const userDist = await userController.getValUserDist(distribuidora);
+    const user = await userController.getValUserDist(distribuidora);
     const resultado = {
-      userDist
+      user
     };
     res.json(resultado);
   } catch (error) {
@@ -203,7 +203,7 @@ app.get('/distribuidora/:slug/usuarios', async (req, res) => {
 
 app.post('/teste', async (req, res) => {
   const { excelData } = req.body;
-
+  console.log('Dados do Excel:', req.body);
   console.log('Recebendo requisição POST em /teste');
   
   if (!excelData) {
