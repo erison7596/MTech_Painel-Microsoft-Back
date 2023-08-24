@@ -1,66 +1,80 @@
-const express = require('express');
-const path = require('path');
-const xlsx = require('xlsx');
-const valorController = require('./src/controllers/valorController');
-const db = require('./src/utils/database');
-const Valor = require('./src/models/valor');
+const express = require("express");
+const path = require("path");
+const xlsx = require("xlsx");
+const valorController = require("./src/controllers/valorController");
+const db = require("./src/utils/database");
+const Valor = require("./src/models/valor");
 const router = express.Router();
-const cors = require('cors');
-const licencaController = require('./src/controllers/licencasController');
-const Licenca = require('./src/models/licencas');
-const bodyParser = require('body-parser');
-const Sequelize = require('sequelize');
-const relatorioController = require('./src/controllers/relatoriosController');
-const relatorioSlugController = require('./src/controllers/relatorioSlugController');
-const userController = require('./src/controllers/userController');
+const cors = require("cors");
+const licencaController = require("./src/controllers/licencasController");
+const Licenca = require("./src/models/licencas");
+const bodyParser = require("body-parser");
+const Sequelize = require("sequelize");
+const relatorioController = require("./src/controllers/relatoriosController");
+const relatorioSlugController = require("./src/controllers/relatorioSlugController");
+const userController = require("./src/controllers/userController");
+const multer = require("multer");
 
 const app = express();
 const port = 4000;
 const corsOptions = {
-  origin: 'http://localhost:3000', // ou a URL do seu front-end Next.js
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  origin: "http://localhost:3000", // ou a URL do seu front-end Next.js
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
   preflightContinue: false,
   optionsSuccessStatus: 204,
 };
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
+app.use(express.json());
 // Configuração para servir arquivos estáticos
-app.use(express.static(__dirname + '/src'));
-
+app.use(express.static(__dirname + "/src"));
 
 //verificar se o banco de dados está conectado
-db.authenticate().then(() => { 
-  console.log('Conectado ao banco de dados');
-}).catch((error) => { 
-  console.error('Erro ao conectar ao banco de dados:', error);
-}) // Rota para listar os dados
-
+db.authenticate()
+  .then(() => {
+    console.log("Conectado ao banco de dados");
+  })
+  .catch((error) => {
+    console.error("Erro ao conectar ao banco de dados:", error);
+  }); // Rota para listar os dados
 
 app.use(cors(corsOptions));
-
-app.get('/', async (req, res) => {
+const upload = multer();
+app.get("/", async (req, res) => {
   try {
     const custoTotal = await relatorioController.calcularCustoTotal();
     const listarLicenca = await relatorioController.listarLicencas();
-    const listarLicencaOrdenada = relatorioController.ordenarPorQuantidade(listarLicenca); //funcionando certo
-    const custoTotalMesAnterior = await relatorioController.calcularCustoTotalMesAnterior();
-    const quantidadeLicencasAtivas = await relatorioController.calcularQuantidadeLicencasAtivas(); //funcionando certo
-    const quantidadeUsuarios = await relatorioController.calcularQuantidadeUsuarios(); //funcionando certo
-    const valorMedioPorUsuario = await relatorioController.calcularValorMedioPorUsuario();
-    const valorTotalLicencas = await relatorioController.calcularValorTotalDeCadaLicenca();
-    const valorTotalLicencasOrdenado = relatorioController.ordenarPorQuantidade(valorTotalLicencas);
-    const calcularHistoricoCustoTotalAno = await relatorioController.calcularHistoricoCustoTotalAno(); //funcionando certo
-    const licencasPorAno = await relatorioController.calcularValorTotalDeCadaLicencaAno();    
+    const listarLicencaOrdenada =
+      relatorioController.ordenarPorQuantidade(listarLicenca); //funcionando certo
+    const custoTotalMesAnterior =
+      await relatorioController.calcularCustoTotalMesAnterior();
+    const quantidadeLicencasAtivas =
+      await relatorioController.calcularQuantidadeLicencasAtivas(); //funcionando certo
+    const quantidadeUsuarios =
+      await relatorioController.calcularQuantidadeUsuarios(); //funcionando certo
+    const valorMedioPorUsuario =
+      await relatorioController.calcularValorMedioPorUsuario();
+    const valorTotalLicencas =
+      await relatorioController.calcularValorTotalDeCadaLicenca();
+    const valorTotalLicencasOrdenado =
+      relatorioController.ordenarPorQuantidade(valorTotalLicencas);
+    const calcularHistoricoCustoTotalAno =
+      await relatorioController.calcularHistoricoCustoTotalAno(); //funcionando certo
+    const licencasPorAno =
+      await relatorioController.calcularValorTotalDeCadaLicencaAno();
 
-    const diferencaDoMesAtualComPassado = await relatorioController.DiferencaDoMesAtualComPassado();
+    const diferencaDoMesAtualComPassado =
+      await relatorioController.DiferencaDoMesAtualComPassado();
 
-    const diferencaUsuarioAtualComPassado = await relatorioController.DiferencaLicencaAtualComPassado();
+    const diferencaUsuarioAtualComPassado =
+      await relatorioController.DiferencaLicencaAtualComPassado();
 
-    const diferencaLicecasAtuaisEAnteriores = await relatorioController.DiferencaLicecasAtuaisEAnteriores();
+    const diferencaLicecasAtuaisEAnteriores =
+      await relatorioController.DiferencaLicecasAtuaisEAnteriores();
 
-    const diferencaValorMedioAtualMesPassado = await relatorioController.DiferencaValorMedioAtualMesPassado();
+    const diferencaValorMedioAtualMesPassado =
+      await relatorioController.DiferencaValorMedioAtualMesPassado();
     const resultado = {
       custoTotal,
       calcularHistoricoCustoTotalAno, //funcionando certo
@@ -74,65 +88,73 @@ app.get('/', async (req, res) => {
       diferencaDoMesAtualComPassado, //funcionando certo
       diferencaUsuarioAtualComPassado, //funcionando certo
       diferencaLicecasAtuaisEAnteriores,
-      diferencaValorMedioAtualMesPassado
+      diferencaValorMedioAtualMesPassado,
     };
 
     res.json(resultado);
   } catch (error) {
-    console.error('Erro ao obter os valores calculados:', error);
-    res.status(500).json({ error: 'Erro ao obter os valores calculados' });
+    console.error("Erro ao obter os valores calculados:", error);
+    res.status(500).json({ error: "Erro ao obter os valores calculados" });
   }
-}); //finalizado 
+}); //finalizado
 
-app.get('/usuarios', async (req, res) => {
+app.get("/usuarios", async (req, res) => {
   try {
     const user = await userController.getValoresComColunasTrue();
     const dados = {
-      user
-    }
+      user,
+    };
     res.json(dados);
   } catch (error) {
-    console.error('Erro ao listar os dados:', error);
-    res.status(500).send('Erro ao listar os dados');
+    console.error("Erro ao listar os dados:", error);
+    res.status(500).send("Erro ao listar os dados");
   }
 });
-  
-  
-// Rota para importar a planilha
-app.get('/importar', (req, res) => {
-  const filePath = path.join(__dirname, 'src', 'public', 'planilhas', 'meuarquivo2.xlsx');
-  const workbook = xlsx.readFile(filePath);
-  const worksheet = workbook.Sheets['ESPECÍFICO'];
-  valorController.importData(worksheet)
-    .then(() => {
-      res.send('Dados importados com sucesso!');
-    })
-    .catch((error) => {
-      console.error('Erro ao importar dados:', error);
-      res.status(500).send('Erro ao importar dados');
-    });
-});
 
-app.get('/deletar', async (req, res) => {
+// // Rota para importar a planilha - era teste
+// app.get("/importar", (req, res) => {
+//   const filePath = path.join(
+//     __dirname,
+//     "src",
+//     "public",
+//     "planilhas",
+//     "meuarquivo2.xlsx"
+//   );
+//   const workbook = xlsx.readFile(filePath);
+//   const worksheet = workbook.Sheets["ESPECÍFICO"];
+//   valorController
+//     .importData(worksheet)
+//     .then(() => {
+//       res.send("Dados importados com sucesso!");
+//     })
+//     .catch((error) => {
+//       console.error("Erro ao importar dados:", error);
+//       res.status(500).send("Erro ao importar dados");
+//     });
+// });
+
+app.get("/deletar", async (req, res) => {
   try {
     // Apagar todos os registros da tabela 'valors'
     await Valor.destroy({
-      truncate: true // Opção para apagar todos os registros
+      truncate: true, // Opção para apagar todos os registros
     });
 
-    res.status(200).json({ message: 'Todos os dados foram apagados com sucesso.' });
+    res
+      .status(200)
+      .json({ message: "Todos os dados foram apagados com sucesso." });
   } catch (error) {
-    console.error('Erro ao apagar os dados:', error);
-    res.status(500).json({ message: 'Ocorreu um erro ao apagar os dados.' });
+    console.error("Erro ao apagar os dados:", error);
+    res.status(500).json({ message: "Ocorreu um erro ao apagar os dados." });
   }
 });
 // Rota para obter os valores de licença
-app.get('/valoreslicenca', licencaController.obterValoresLicencas);
+app.get("/valoreslicenca", licencaController.obterValoresLicencas);
 
 // Rota para criar um novo valor de licença
-app.post('/valoreslicenca', licencaController.criarValorLicenca);
+app.post("/valoreslicenca", licencaController.criarValorLicenca);
 
-app.get('/distribuidoras', async (req, res) => {
+app.get("/distribuidoras", async (req, res) => {
   try {
     const Distribuidoras = await relatorioSlugController.Distribuidoras();
     const resultado = {
@@ -141,28 +163,51 @@ app.get('/distribuidoras', async (req, res) => {
 
     res.json(Distribuidoras);
   } catch (error) {
-    console.error('Erro ao buscar as distribuidoras:', error);
-    res.status(500).json({ error: 'Erro ao buscar as distribuidoras' });
+    console.error("Erro ao buscar as distribuidoras:", error);
+    res.status(500).json({ error: "Erro ao buscar as distribuidoras" });
   }
 });
 
-app.get('/distribuidora/:slug', async (req, res) => {
+app.get("/distribuidora/:slug", async (req, res) => {
   try {
     const { slug } = req.params;
-    const distribuidora = await relatorioSlugController.getIdDistribuidoraFromSlug(slug);
-    const calcularHistoricoCustoTotalAno = (await relatorioSlugController.reformatData())[distribuidora];
-    const custoTotal = (await relatorioSlugController.CustoTotalMesAtual())[distribuidora];
-    const listarLicencaOrdenada = (await relatorioSlugController.QuantlicencasAtualMapping())
-    [distribuidora];
-    const quantidadeLicencasAtivas = (await relatorioSlugController.QuantlicencasAtual())[distribuidora];
-    const quantidadeUsuarios = (await relatorioSlugController.QuantidadeDeUserDistMesAtual())[distribuidora];
-    const valorMedioPorUsuario = (await relatorioSlugController.valorMedioPorUsuarioAtual())[distribuidora];
-    const valorTotalLicencasOrdenado = (await relatorioSlugController.sumLicenseValuesmapping())[distribuidora];
-    const licencasPorAno = await relatorioController.calcularValorTotalDeCadaLicencaAno();
-    const diferencaDoMesAtualComPassado = (await relatorioSlugController.DiferencaPercentuaValorTotal())[distribuidora];
-    const diferencaUsuarioAtualComPassado = (await relatorioSlugController.DiferencaPercentualUsuarios())[distribuidora];
-    const diferencaLicecasAtuaisEAnteriores = (await relatorioSlugController.DiferencaLicecasAtuaisEAnteriores())[distribuidora];
-    const diferencaValorMedioAtualMesPassado = (await relatorioSlugController.DiferencaPercentuaMediaTotal())[distribuidora];
+    const distribuidora =
+      await relatorioSlugController.getIdDistribuidoraFromSlug(slug);
+    const calcularHistoricoCustoTotalAno = (
+      await relatorioSlugController.reformatData()
+    )[distribuidora];
+    const custoTotal = (await relatorioSlugController.CustoTotalMesAtual())[
+      distribuidora
+    ];
+    const listarLicencaOrdenada = (
+      await relatorioSlugController.QuantlicencasAtualMapping()
+    )[distribuidora];
+    const quantidadeLicencasAtivas = (
+      await relatorioSlugController.QuantlicencasAtual()
+    )[distribuidora];
+    const quantidadeUsuarios = (
+      await relatorioSlugController.QuantidadeDeUserDistMesAtual()
+    )[distribuidora];
+    const valorMedioPorUsuario = (
+      await relatorioSlugController.valorMedioPorUsuarioAtual()
+    )[distribuidora];
+    const valorTotalLicencasOrdenado = (
+      await relatorioSlugController.sumLicenseValuesmapping()
+    )[distribuidora];
+    const licencasPorAno =
+      await relatorioController.calcularValorTotalDeCadaLicencaAno();
+    const diferencaDoMesAtualComPassado = (
+      await relatorioSlugController.DiferencaPercentuaValorTotal()
+    )[distribuidora];
+    const diferencaUsuarioAtualComPassado = (
+      await relatorioSlugController.DiferencaPercentualUsuarios()
+    )[distribuidora];
+    const diferencaLicecasAtuaisEAnteriores = (
+      await relatorioSlugController.DiferencaLicecasAtuaisEAnteriores()
+    )[distribuidora];
+    const diferencaValorMedioAtualMesPassado = (
+      await relatorioSlugController.DiferencaPercentuaMediaTotal()
+    )[distribuidora];
     const resultado = {
       custoTotal,
       calcularHistoricoCustoTotalAno,
@@ -175,65 +220,50 @@ app.get('/distribuidora/:slug', async (req, res) => {
       diferencaDoMesAtualComPassado,
       diferencaUsuarioAtualComPassado,
       diferencaLicecasAtuaisEAnteriores,
-      diferencaValorMedioAtualMesPassado
+      diferencaValorMedioAtualMesPassado,
     };
 
     res.json(resultado);
   } catch (error) {
-    console.error('Erro ao obter os valores calculados:', error);
-    res.status(500).json({ error: 'Erro ao obter os valores calculados' });
+    console.error("Erro ao obter os valores calculados:", error);
+    res.status(500).json({ error: "Erro ao obter os valores calculados" });
   }
 });
 
-
-app.get('/distribuidora/:slug/usuarios', async (req, res) => {
+app.get("/distribuidora/:slug/usuarios", async (req, res) => {
   try {
     const { slug } = req.params;
-    const distribuidora = await relatorioSlugController.getIdDistribuidoraFromSlug(slug);
+    const distribuidora =
+      await relatorioSlugController.getIdDistribuidoraFromSlug(slug);
     const user = await userController.getValUserDist(distribuidora);
     const resultado = {
-      user
+      user,
     };
     res.json(resultado);
   } catch (error) {
-    console.error('Erro ao obter os valores calculados:', error);
-    res.status(500).json({ error: 'Erro ao obter os valores calculados' });
+    console.error("Erro ao obter os valores calculados:", error);
+    res.status(500).json({ error: "Erro ao obter os valores calculados" });
   }
 });
 
-app.post('/teste', async (req, res) => {
-  const { excelData } = req.body;
-  console.log('Dados do Excel:', req.body);
-  console.log('Recebendo requisição POST em /teste');
-  
-  if (!excelData) {
-    console.log('Dados do Excel ausentes na requisição.');
-    return res.status(400).json({ error: 'No Excel data provided.' });
-  }
-
+app.post("/importar", upload.single("excelData"), (req, res) => {
   try {
-    console.log('Processando dados do Excel...');
-
-    const arrayBuffer = new Uint8Array(Buffer.from(excelData, 'base64'));
-    const workbook = xlsx.read(arrayBuffer, { type: 'buffer' });
-    const worksheet = workbook.Sheets['ESPECÍFICO'];
-
-    valorController.importData(worksheet)
+    const workbook = xlsx.read(req.file.buffer);
+    const worksheet = workbook.Sheets["ESPECÍFICO"];
+    valorController
+      .importData(worksheet)
       .then(() => {
-        console.log('Dados importados com sucesso!');
-        res.send('Dados importados com sucesso!');
+        res.send("Dados importados com sucesso!");
       })
       .catch((error) => {
-        console.error('Erro ao importar dados:', error);
-        res.status(500).send('Erro ao importar dados');
+        console.error("Erro ao importar dados:", error);
+        res.status(500).send("Erro ao importar dados");
       });
   } catch (error) {
-    console.error('Erro ao processar os dados do Excel:', error);
-    res.status(500).send('Erro ao processar os dados do Excel');
+    console.error("Erro ao processar arquivo:", error);
+    res.status(500).send("Erro ao processar arquivo");
   }
 });
-
-
 
 app.listen(port, () => {
   console.log(`Servidor rodando em http://localhost:${port}`);

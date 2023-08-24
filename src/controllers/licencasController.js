@@ -1,12 +1,12 @@
-const Licenca = require('../models/licencas');
-const HistoricoLicenca = require('../models/historicoLicenca');
+const Licenca = require("../models/licencas");
+const HistoricoLicenca = require("../models/historicoLicenca");
 
 async function criarValorLicenca(req, res) {
   const { licencas } = req.body;
 
   if (!licencas || !Array.isArray(licencas)) {
     // console.log('Lista de licenças inválida:', licencas);
-    return res.status(400).json({ error: 'Lista de licenças inválida' });
+    return res.status(400).json({ error: "Lista de licenças inválida" });
   }
 
   try {
@@ -40,10 +40,14 @@ async function criarValorLicenca(req, res) {
       }
     }
 
-    return res.status(201).json({ message: 'Valores de licenças criados/atualizados com sucesso' });
+    return res
+      .status(201)
+      .json({ message: "Valores de licenças criados/atualizados com sucesso" });
   } catch (error) {
-    console.error('Erro ao criar/atualizar valores de licenças:', error);
-    return res.status(500).json({ error: 'Erro ao criar/atualizar valores de licenças' });
+    console.error("Erro ao criar/atualizar valores de licenças:", error);
+    return res
+      .status(500)
+      .json({ error: "Erro ao criar/atualizar valores de licenças" });
   }
 }
 
@@ -52,8 +56,8 @@ async function obterValoresLicencas(req, res) {
     const valoresLicencas = await Licenca.findAll();
     return res.json(valoresLicencas);
   } catch (error) {
-    console.error('Erro ao obter valores de licenças:', error);
-    return res.status(500).json({ error: 'Erro ao obter valores de licenças' });
+    console.error("Erro ao obter valores de licenças:", error);
+    return res.status(500).json({ error: "Erro ao obter valores de licenças" });
   }
 }
 
