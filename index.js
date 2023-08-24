@@ -111,7 +111,7 @@ app.get("/usuarios", async (req, res) => {
   }
 });
 
-// // Rota para importar a planilha - era teste
+// // Rota para importar a planilha -era teste
 // app.get("/importar", (req, res) => {
 //   const filePath = path.join(
 //     __dirname,
@@ -248,12 +248,23 @@ app.get("/distribuidora/:slug/usuarios", async (req, res) => {
 
 app.post("/importar", upload.single("excelData"), (req, res) => {
   try {
+    const allowedExtensions = [".xlsx", ".csv", ".ods", ".tsv"];
+    const fileExtension = req.file.originalname.substring(
+      req.file.originalname.lastIndexOf(".")
+    );
+
+    if (!allowedExtensions.includes(fileExtension)) {
+      res.status(400).send("Tipo de arquivo não suportado.");
+      return;
+    }
+
     const workbook = xlsx.read(req.file.buffer);
     const worksheet = workbook.Sheets["ESPECÍFICO"];
+
     valorController
       .importData(worksheet)
       .then(() => {
-        res.send("Dados importados com sucesso!");
+        res.status(200).json({ message: "Dados importados com sucesso!" });
       })
       .catch((error) => {
         console.error("Erro ao importar dados:", error);
