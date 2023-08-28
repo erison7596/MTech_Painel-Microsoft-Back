@@ -271,7 +271,7 @@ app.post("/importar", upload.single("excelData"), (req, res) => {
         res.status(500).send("Erro ao importar dados");
       });
   } catch (error) {
-    console.error("Erro ao processar arquivo:", error);
+    // console.error("Erro ao processar arquivo:", error);
     res.status(500).send("Erro ao processar arquivo");
   }
 });

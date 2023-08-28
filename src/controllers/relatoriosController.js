@@ -627,18 +627,29 @@ async function QuantidaDeUsuariosMes() {
 async function DiferencaLicencaAtualComPassado() {
   try {
     const quantidadePorMesEAno = await QuantidaDeUsuariosMes();
+    const anoAtual = new Date().getFullYear(); // Obtém o ano atual
 
     const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
 
-    const usuariosMesAtual = quantidadePorMesEAno["2023"][mesAtual];
-    const usuariosMesAnterior = quantidadePorMesEAno["2023"][mesAtual - 1];
+    if (
+      quantidadePorMesEAno[anoAtual] &&
+      quantidadePorMesEAno[anoAtual][mesAtual] !== undefined
+    ) {
+      const usuariosMesAtual = quantidadePorMesEAno[anoAtual][mesAtual];
+      const usuariosMesAnterior = quantidadePorMesEAno[anoAtual][mesAtual - 1];
 
-    if (usuariosMesAnterior !== undefined && usuariosMesAnterior !== 0) {
-      const diferenca =
-        ((usuariosMesAtual - usuariosMesAnterior) / usuariosMesAnterior) * 100;
-      return parseFloat(diferenca.toFixed(2));
+      if (usuariosMesAnterior !== undefined && usuariosMesAnterior !== 0) {
+        const diferenca =
+          ((usuariosMesAtual - usuariosMesAnterior) / usuariosMesAnterior) *
+          100;
+        return parseFloat(diferenca.toFixed(2));
+      } else {
+        return 0;
+      }
     } else {
-      return 0;
+      throw new Error(
+        `Dados insuficientes para o ano de ${anoAtual} ou mês atual.`
+      );
     }
   } catch (error) {
     throw new Error(
