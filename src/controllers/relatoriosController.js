@@ -599,6 +599,8 @@ async function DiferencaDoMesAtualComPassado() {
       console.log(
         "\n\n\n Diferença do mês atual com o passado: " + diferenca + "%\n\n\n"
       );
+      console.log("\n\n\nmes atual: " + mesAtual);
+      console.log("\n\n\nmes passado: " + mesPassado);
 
       // Retornar a diferença como float com duas casas decimais
       return parseFloat(diferenca.toFixed(2));
