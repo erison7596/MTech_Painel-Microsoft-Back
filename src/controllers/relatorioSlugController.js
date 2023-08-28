@@ -313,6 +313,9 @@ async function DiferencaPercentualUsuarios() {
       if (licencasPassado !== undefined) {
         const percentageDiff =
           ((licencasAtual - licencasPassado) / licencasPassado) * 100;
+        if (!isNaN(percentageDiff)) {
+          percentageDiff = 0;
+        }
         // Formata o resultado para ter duas casas decimais
         const formattedPercentageDiff = parseFloat(percentageDiff.toFixed(2));
         diffPercentage[distribuidora] = formattedPercentageDiff;
@@ -370,32 +373,41 @@ async function SomaLicencasPorMes() {
 async function DiferencaLicecasAtuaisEAnteriores() {
   try {
     const quantLicencasPorMes = await SomaLicencasPorMes();
-
+    const anoAtual = new Date().getFullYear(); // Obtém o ano atual
     const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
     const mesAnterior = mesAtual - 1;
 
-    const usuariosMesAtual = quantLicencasPorMes["2023"][mesAtual.toString()];
-    const usuariosMesAnterior =
-      quantLicencasPorMes["2023"][mesAnterior.toString()];
+    if (
+      quantLicencasPorMes[anoAtual] &&
+      quantLicencasPorMes[anoAtual][mesAtual.toString()] &&
+      quantLicencasPorMes[anoAtual][mesAnterior.toString()]
+    ) {
+      const usuariosMesAtual =
+        quantLicencasPorMes[anoAtual][mesAtual.toString()];
+      const usuariosMesAnterior =
+        quantLicencasPorMes[anoAtual][mesAnterior.toString()];
 
-    const diferencaPorDistribuidora = {};
+      const diferencaPorDistribuidora = {};
 
-    for (const distribuidora in usuariosMesAtual) {
-      const usuariosAnterior = usuariosMesAnterior[distribuidora] || 0;
-      const usuariosAtual = usuariosMesAtual[distribuidora];
+      for (const distribuidora in usuariosMesAtual) {
+        const usuariosAnterior = usuariosMesAnterior[distribuidora] || 0;
+        const usuariosAtual = usuariosMesAtual[distribuidora];
 
-      if (usuariosAnterior !== 0) {
-        const diferenca =
-          ((usuariosAtual - usuariosAnterior) / usuariosAnterior) * 100;
-        diferencaPorDistribuidora[distribuidora] = parseFloat(
-          diferenca.toFixed(2)
-        );
-      } else {
-        diferencaPorDistribuidora[distribuidora] = 0;
+        if (usuariosAnterior !== 0) {
+          const diferenca =
+            ((usuariosAtual - usuariosAnterior) / usuariosAnterior) * 100;
+          diferencaPorDistribuidora[distribuidora] = parseFloat(
+            diferenca.toFixed(2)
+          );
+        } else {
+          diferencaPorDistribuidora[distribuidora] = 0;
+        }
       }
-    }
 
-    return diferencaPorDistribuidora;
+      return diferencaPorDistribuidora;
+    } else {
+      return {};
+    }
   } catch (error) {
     throw new Error(
       "Erro ao calcular a diferença do valor médio atual com o passado: " +
@@ -409,9 +421,10 @@ async function ExtrairDadosMeses() {
     const licencasAgrupadas = await LicencasAgrupadasPorAnoMesDist();
     const mesAtual = new Date().getMonth() + 1;
     const mesAnterior = mesAtual - 1;
-
-    const dadosMesAtual = licencasAgrupadas["2023"][mesAtual.toString()];
-    const dadosMesAnterior = licencasAgrupadas["2023"][mesAnterior.toString()];
+    const anoAtual = new Date().getFullYear();
+    const dadosMesAtual = licencasAgrupadas[anoAtual][mesAtual.toString()];
+    const dadosMesAnterior =
+      licencasAgrupadas[anoAtual][mesAnterior.toString()];
 
     const resultado = {
       [mesAtual.toString()]: {},
