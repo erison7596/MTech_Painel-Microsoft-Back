@@ -775,15 +775,18 @@ async function DiferencaPercentuaMediaTotal() {
       const licencasAtual = parseFloat(quantLicencasMesAtual[distribuidora]);
       const licencasPassado = quantLicencasMesPassado[distribuidora];
 
-      if (licencasPassado !== undefined) {
+      if (licencasPassado !== undefined && licencasPassado !== 0) {
         const percentageDiff =
           ((licencasAtual - licencasPassado) / licencasPassado) * 100;
-        if (isNaN(percentageDiff)) {
-          percentageDiff = 0;
+
+        // Verifica se o resultado é um número válido
+        if (!isNaN(percentageDiff)) {
+          // Formata o resultado para ter duas casas decimais
+          const formattedPercentageDiff = parseFloat(percentageDiff.toFixed(2));
+          diffPercentage[distribuidora] = formattedPercentageDiff;
+        } else {
+          diffPercentage[distribuidora] = 0;
         }
-        // Formata o resultado para ter duas casas decimais
-        const formattedPercentageDiff = parseFloat(percentageDiff.toFixed(2));
-        diffPercentage[distribuidora] = formattedPercentageDiff;
       } else {
         diffPercentage[distribuidora] = 0;
       }

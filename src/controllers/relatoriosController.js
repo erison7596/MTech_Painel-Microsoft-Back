@@ -551,6 +551,7 @@ function ordenarPorQuantidade(objeto) {
 
 async function calcularValorTotalDeCadaLicencaAno() {
   try {
+    const anoAtual = new Date().getFullYear(); // Obtém o ano atual
     const query = `
       SELECT l.nome, YEAR(h.data) AS ano, h.valor
       FROM historico_licencas h
@@ -562,11 +563,11 @@ async function calcularValorTotalDeCadaLicencaAno() {
       ON h.nome = ultima_data.nome AND YEAR(h.data) = ultima_data.ano AND h.data = ultima_data.max_data
       RIGHT JOIN licencas l
       ON l.nome = h.nome
-      WHERE YEAR(h.data) < YEAR(NOW())
+      WHERE YEAR(h.data) < ${anoAtual}
       
       UNION
 
-      SELECT l.nome, 2023 AS ano, l.valor
+      SELECT l.nome, ${anoAtual} AS ano, l.valor
       FROM licencas l;
     `;
 
