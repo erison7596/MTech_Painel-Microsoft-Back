@@ -588,7 +588,12 @@ async function DiferencaDoMesAtualComPassado() {
     console.log("\n\n\n Mes atual: " + mesAtual + "\n\n\n");
     console.log("\n\n\n Mes passado: " + mesPassado + "\n\n\n");
 
-    if (mesPassado !== undefined && mesPassado !== 0) {
+    if (
+      !isNaN(mesAtual) &&
+      !isNaN(mesPassado) &&
+      mesPassado !== 0 &&
+      mesAtual !== 0
+    ) {
       // Calcular a diferença em %
       const diferenca = ((mesAtual - mesPassado) / mesPassado) * 100;
       console.log(
