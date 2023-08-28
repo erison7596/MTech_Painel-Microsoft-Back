@@ -262,7 +262,15 @@ async function HistValLicencas() {
     const currentYear = new Date().getFullYear();
     const currentMonth = new Date().getMonth() + 1; // Janeiro é 0
 
-    historico[currentYear][currentMonth] = valoresAtuais;
+    if (!historico[currentYear]) {
+      historico[currentYear] = {};
+    }
+
+    if (!historico[currentYear][currentMonth]) {
+      historico[currentYear][currentMonth] = {};
+    }
+
+    historico[currentYear][currentMonth] = valoresAtuais || 0;
 
     return historico;
   } catch (error) {
