@@ -595,7 +595,11 @@ async function DiferencaDoMesAtualComPassado() {
       mesAtual !== 0
     ) {
       // Calcular a diferença em %
-      const diferenca = ((mesAtual - mesPassado) / mesPassado) * 100;
+      if (mesPassado == 0) {
+        const diferenca = 0;
+      } else {
+        const diferenca = ((mesAtual - mesPassado) / mesPassado) * 100;
+      }
       console.log(
         "\n\n\n Diferença do mês atual com o passado: " + diferenca + "%\n\n\n"
       );
