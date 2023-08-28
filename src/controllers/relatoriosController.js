@@ -588,26 +588,22 @@ async function DiferencaDoMesAtualComPassado() {
     console.log("\n\n\n Mes atual: " + mesAtual + "\n\n\n");
     console.log("\n\n\n Mes passado: " + mesPassado + "\n\n\n");
 
-    if (
-      !isNaN(mesAtual) &&
-      !isNaN(mesPassado) &&
-      mesPassado !== 0 &&
-      mesAtual !== 0
-    ) {
-      // Calcular a diferença em %
-      if (mesPassado == 0) {
-        const diferenca = 0;
-      } else {
+    if (!isNaN(mesAtual) && !isNaN(mesPassado)) {
+      if (mesPassado !== 0) {
+        // Calcular a diferença em %
         const diferenca = ((mesAtual - mesPassado) / mesPassado) * 100;
-      }
-      console.log(
-        "\n\n\n Diferença do mês atual com o passado: " + diferenca + "%\n\n\n"
-      );
-      console.log("\n\n\nmes atual: " + mesAtual);
-      console.log("\n\n\nmes passado: " + mesPassado);
+        console.log(
+          "\n\n\n Diferença do mês atual com o passado: " +
+            diferenca +
+            "%\n\n\n"
+        );
 
-      // Retornar a diferença como float com duas casas decimais
-      return parseFloat(diferenca.toFixed(2));
+        // Retornar a diferença como float com duas casas decimais
+        return parseFloat(diferenca.toFixed(2));
+      } else {
+        console.log("\n\n\n Mês passado é 0. Diferença será 0.\n\n\n");
+        return 0;
+      }
     } else {
       return 0;
     }
