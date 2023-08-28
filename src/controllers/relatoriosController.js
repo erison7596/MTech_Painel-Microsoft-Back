@@ -647,9 +647,7 @@ async function DiferencaLicencaAtualComPassado() {
         return 0;
       }
     } else {
-      throw new Error(
-        `Dados insuficientes para o ano de ${anoAtual} ou mês atual.`
-      );
+      return 0; // Retorna 0 se os dados não estiverem disponíveis
     }
   } catch (error) {
     throw new Error(
