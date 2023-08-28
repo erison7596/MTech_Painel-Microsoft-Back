@@ -320,7 +320,7 @@ async function DiferencaPercentualUsuarios() {
         const formattedPercentageDiff = parseFloat(percentageDiff.toFixed(2));
         diffPercentage[distribuidora] = formattedPercentageDiff;
       } else {
-        diffPercentage[distribuidora] = null;
+        diffPercentage[distribuidora] = 0;
       }
     });
 
