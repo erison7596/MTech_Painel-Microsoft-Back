@@ -313,7 +313,7 @@ async function DiferencaPercentualUsuarios() {
       if (licencasPassado !== undefined) {
         const percentageDiff =
           ((licencasAtual - licencasPassado) / licencasPassado) * 100;
-        if (!isNaN(percentageDiff)) {
+        if (isNaN(percentageDiff)) {
           percentageDiff = 0;
         }
         // Formata o resultado para ter duas casas decimais
