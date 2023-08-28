@@ -652,7 +652,7 @@ async function CustoTotalMesAtualMesPassado() {
   try {
     const licenses = await SomaLicencasMesPassado();
     const totalValues = {};
-
+    console.log("\n\n\nLicenses", licenses);
     for (const location in licenses) {
       const locationValues = Object.values(licenses[location]);
       const totalValue = locationValues.reduce((sum, value) => sum + value, 0);
@@ -739,11 +739,14 @@ async function valorMedioPorUsuarioPassado() {
 
       if (!isNaN(quantidadeUsuarios) && quantidadeUsuarios > 0) {
         const media = custoTotal / quantidadeUsuarios;
+        if (isNaN(media)) {
+          media = 0;
+        }
         // Formata o resultado para ter duas casas decimais
         const formattedMedia = parseFloat(media.toFixed(2));
         mediaCustoPorUsuario[distribuidora] = formattedMedia;
       } else {
-        mediaCustoPorUsuario[distribuidora] = null;
+        mediaCustoPorUsuario[distribuidora] = 0;
       }
     });
 
@@ -767,11 +770,14 @@ async function DiferencaPercentuaMediaTotal() {
       if (licencasPassado !== undefined) {
         const percentageDiff =
           ((licencasAtual - licencasPassado) / licencasPassado) * 100;
+        if (isNaN(percentageDiff)) {
+          percentageDiff = 0;
+        }
         // Formata o resultado para ter duas casas decimais
         const formattedPercentageDiff = parseFloat(percentageDiff.toFixed(2));
         diffPercentage[distribuidora] = formattedPercentageDiff;
       } else {
-        diffPercentage[distribuidora] = null;
+        diffPercentage[distribuidora] = 0;
       }
     });
 
