@@ -113,18 +113,18 @@ async function calcularCustoTotal() {
           if (!isNaN(valorLicenca)) {
             return total + valorLicenca;
           } else {
-            console.error("Valor de licença inválido:", valoresLicencas[nome]);
+            // console.error("Valor de licença inválido:", valoresLicencas[nome]);
             return total;
           }
         } else {
-          console.error("Nome de licença não encontrado:", nome);
+          // console.error("Nome de licença não encontrado:", nome);
           return total;
         }
       } else {
-        console.error(
-          "Valor ausente ou inconsistente para calcular o custo total:",
-          licenca.dataValues
-        );
+        // console.error(
+        //   "Valor ausente ou inconsistente para calcular o custo total:",
+        //   licenca.dataValues
+        // );
         return total;
       }
     }, 0);
@@ -585,23 +585,18 @@ async function DiferencaDoMesAtualComPassado() {
     const mesAtual = await calcularCustoTotal(); // Aguardando a resolução da Promise
     const mesPassado = await calcularCustoTotalMesAnterior(); // Aguardando a resolução da Promise
 
-    console.log("\n\n\n Mes atual: " + mesAtual + "\n\n\n");
-    console.log("\n\n\n Mes passado: " + mesPassado + "\n\n\n");
-
     if (!isNaN(mesAtual) && !isNaN(mesPassado)) {
       if (mesPassado !== 0) {
         // Calcular a diferença em %
         const diferenca = ((mesAtual - mesPassado) / mesPassado) * 100;
-        console.log(
-          "\n\n\n Diferença do mês atual com o passado: " +
-            diferenca +
-            "%\n\n\n"
-        );
 
         // Retornar a diferença como float com duas casas decimais
-        return parseFloat(diferenca.toFixed(2));
+        if (!isNaN(diferenca.toFixed(2))) {
+          return parseFloat(diferenca.toFixed(2));
+        } else {
+          return 0;
+        }
       } else {
-        console.log("\n\n\n Mês passado é 0. Diferença será 0.\n\n\n");
         return 0;
       }
     } else {
