@@ -485,9 +485,11 @@ async function calcularQuantidadeUsuarios() {
       0
     );
 
-    return totalUsuarios;
+    return totalUsuarios || 0; // Retorna 0 se não houver dados
   } catch (error) {
-    throw new Error("Erro ao calcular a quantidade de usuários:", error);
+    throw new Error(
+      "Erro ao calcular a quantidade de usuários: " + error.message
+    );
   }
 }
 
@@ -698,17 +700,25 @@ async function DiferencaValorMedioAtualMesPassado() {
   try {
     const quantLicencasPorMes = await CalcularValorMedioPorPessoaMes();
 
+    const anoAtual = new Date().getFullYear(); // Obtém o ano atual
     const mesAtual = new Date().getMonth() + 1;
 
-    const usuariosMesAtual = quantLicencasPorMes["2023"][mesAtual];
-    const usuariosMesPassado = quantLicencasPorMes["2023"][mesAtual - 1];
+    if (
+      quantLicencasPorMes[anoAtual] &&
+      quantLicencasPorMes[anoAtual][mesAtual] !== undefined
+    ) {
+      const usuariosMesAtual = quantLicencasPorMes[anoAtual][mesAtual];
+      const usuariosMesPassado = quantLicencasPorMes[anoAtual][mesAtual - 1];
 
-    if (usuariosMesPassado !== undefined && usuariosMesPassado !== 0) {
-      const diferenca =
-        ((usuariosMesAtual - usuariosMesPassado) / usuariosMesPassado) * 100;
-      return parseFloat(diferenca.toFixed(2));
+      if (usuariosMesPassado !== undefined && usuariosMesPassado !== 0) {
+        const diferenca =
+          ((usuariosMesAtual - usuariosMesPassado) / usuariosMesPassado) * 100;
+        return parseFloat(diferenca.toFixed(2));
+      } else {
+        return 0;
+      }
     } else {
-      return 0;
+      return 0; // Retorna 0 se os dados não estiverem disponíveis
     }
   } catch (error) {
     throw new Error(
