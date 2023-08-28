@@ -274,17 +274,23 @@ async function QuantidadeDeLicencaMes() {
 async function DiferencaLicecasAtuaisEAnteriores() {
   try {
     const data = await QuantidadeDeLicencaMes();
+    const anoAtual = new Date().getFullYear(); // Obtém o ano atual
     const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
 
-    const usuariosMesAtual = data["2023"][mesAtual];
-    const usuariosMesAnterior = data["2023"][mesAtual - 1];
+    if (data[anoAtual] && data[anoAtual][mesAtual] !== undefined) {
+      const usuariosMesAtual = data[anoAtual][mesAtual];
+      const usuariosMesAnterior = data[anoAtual][mesAtual - 1];
 
-    if (usuariosMesAnterior !== undefined && usuariosMesAnterior !== 0) {
-      const diferenca =
-        ((usuariosMesAtual - usuariosMesAnterior) / usuariosMesAnterior) * 100;
-      return parseFloat(diferenca.toFixed(2));
+      if (usuariosMesAnterior !== undefined && usuariosMesAnterior !== 0) {
+        const diferenca =
+          ((usuariosMesAtual - usuariosMesAnterior) / usuariosMesAnterior) *
+          100;
+        return parseFloat(diferenca.toFixed(2));
+      } else {
+        return 0;
+      }
     } else {
-      return 0;
+      return 0; // Retorna 0 se os dados não estiverem disponíveis
     }
   } catch (error) {
     console.error(
