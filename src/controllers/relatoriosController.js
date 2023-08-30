@@ -498,7 +498,11 @@ async function calcularValorMedioPorUsuario() {
     const quantidadeUsuarios = await calcularQuantidadeUsuarios();
     const custoTotal = await calcularCustoTotal();
     const valorMedioPorUsuario = custoTotal / quantidadeUsuarios;
-    return valorMedioPorUsuario.toFixed(2);
+    if (isNaN(valorMedioPorUsuario)) {
+      return 0;
+    } else {
+      return valorMedioPorUsuario.toFixed(2);
+    }
   } catch (error) {
     throw new Error("Erro ao calcular o valor médio por usuário:", error);
   }
@@ -520,10 +524,10 @@ async function calcularValorTotalDeCadaLicenca() {
         const valorTotal = quantidade * valor;
         valorTotalPorLicenca[nome] = valorTotal;
       } else {
-        console.error(
-          "Valor ausente ou inconsistente para calcular o valor total:",
-          licenca.dataValues
-        );
+        // console.error(
+        //   "Valor ausente ou inconsistente para calcular o valor total:",
+        //   licenca.dataValues
+        // );
       }
     }
 
