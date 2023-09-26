@@ -1,0 +1,5 @@
+# Arquivos e diretórios específicos do Node.js
+node_modules
+
+# Arquivos e diretórios específicos de controle de versão
+.gitignore
