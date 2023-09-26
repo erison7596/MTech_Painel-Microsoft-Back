@@ -3,7 +3,6 @@ const { Sequelize } = require("sequelize");
 const db = new Sequelize("pcm", "root", "91188982", {
   host: "mysql-db",
   dialect: "mysql",
-  port: 3308,
   timezone: "-03:00",
 });
 
