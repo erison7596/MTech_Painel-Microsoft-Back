@@ -371,7 +371,6 @@ async function SomaLicencasPorMes() {
         }
       }
     }
-
     return somaPorMes;
   } catch (error) {
     console.error("Erro ao obter dados das licenças:", error);
@@ -381,19 +380,18 @@ async function SomaLicencasPorMes() {
 async function DiferencaLicecasAtuaisEAnteriores() {
   try {
     const quantLicencasPorMes = await SomaLicencasPorMes();
-    const anoAtual = new Date().getFullYear(); // Obtém o ano atual
-    const mesAtual = new Date().getMonth() + 1; // Obtém o mês atual (adiciona 1 porque os meses em JavaScript começam de 0)
+    const anoAtual = new Date().getFullYear();
+    const mesAtual = new Date().getMonth() + 1;
     const mesAnterior = mesAtual - 1;
 
     if (
       quantLicencasPorMes[anoAtual] &&
-      quantLicencasPorMes[anoAtual][mesAtual.toString()] &&
-      quantLicencasPorMes[anoAtual][mesAnterior.toString()]
+      quantLicencasPorMes[anoAtual][mesAtual.toString()]
     ) {
       const usuariosMesAtual =
         quantLicencasPorMes[anoAtual][mesAtual.toString()];
       const usuariosMesAnterior =
-        quantLicencasPorMes[anoAtual][mesAnterior.toString()];
+        quantLicencasPorMes[anoAtual][mesAnterior.toString()] || {}; // Use um objeto vazio como padrão se não houver valores para o mês anterior
 
       const diferencaPorDistribuidora = {};
 
@@ -404,17 +402,20 @@ async function DiferencaLicecasAtuaisEAnteriores() {
         if (usuariosAnterior !== 0) {
           const diferenca =
             ((usuariosAtual - usuariosAnterior) / usuariosAnterior) * 100;
-          diferencaPorDistribuidora[distribuidora] = parseFloat(
-            diferenca.toFixed(2)
-          );
+          if (isNaN(diferenca)) {
+            diferencaPorDistribuidora[distribuidora] = 0;
+          } else {
+            diferencaPorDistribuidora[distribuidora] = parseFloat(
+              diferenca.toFixed(2)
+            );
+          }
         } else {
           diferencaPorDistribuidora[distribuidora] = 0;
         }
       }
-
       return diferencaPorDistribuidora;
     } else {
-      return {};
+      return {}; // Retorna um objeto vazio para as distribuidoras sem valores
     }
   } catch (error) {
     throw new Error(
@@ -424,15 +425,16 @@ async function DiferencaLicecasAtuaisEAnteriores() {
   }
 }
 
+
 async function ExtrairDadosMeses() {
   try {
     const licencasAgrupadas = await LicencasAgrupadasPorAnoMesDist();
     const mesAtual = new Date().getMonth() + 1;
     const mesAnterior = mesAtual - 1;
     const anoAtual = new Date().getFullYear();
-    const dadosMesAtual = licencasAgrupadas[anoAtual][mesAtual.toString()];
-    const dadosMesAnterior =
-      licencasAgrupadas[anoAtual][mesAnterior.toString()];
+
+    const dadosMesAtual = licencasAgrupadas[anoAtual]?.[mesAtual.toString()] || {};
+    const dadosMesAnterior = licencasAgrupadas[anoAtual]?.[mesAnterior.toString()] || {};
 
     const resultado = {
       [mesAtual.toString()]: {},
@@ -440,10 +442,15 @@ async function ExtrairDadosMeses() {
     };
 
     const ordenarPorQuantidade = (dados) => {
+      if(!dados) return {};
       const planosOrdenados = Object.entries(dados).sort((a, b) => b[1] - a[1]);
       const planosOrdenadosObj = {};
       for (const [plano, quantidade] of planosOrdenados) {
-        planosOrdenadosObj[plano] = quantidade;
+        if (isNaN(quantidade)) { 
+          planosOrdenadosObj[plano] = 0;
+        } else {
+          planosOrdenadosObj[plano] = quantidade;
+        }
       }
       return planosOrdenadosObj;
     };
@@ -468,6 +475,7 @@ async function ExtrairDadosMeses() {
     return {};
   }
 }
+
 
 async function QuantidadeLicencaAtualDist() {
   try {
@@ -660,7 +668,6 @@ async function CustoTotalMesAtualMesPassado() {
   try {
     const licenses = await SomaLicencasMesPassado();
     const totalValues = {};
-    console.log("\n\n\nLicenses", licenses);
     for (const location in licenses) {
       const locationValues = Object.values(licenses[location]);
       const totalValue = locationValues.reduce((sum, value) => sum + value, 0);
@@ -689,9 +696,13 @@ async function DiferencaPercentuaValorTotal() {
           ((licencasAtual - licencasPassado) / licencasPassado) * 100;
         // Formata o resultado para ter duas casas decimais
         const formattedPercentageDiff = parseFloat(percentageDiff.toFixed(2));
-        diffPercentage[distribuidora] = formattedPercentageDiff;
+        if (!isNaN(formattedPercentageDiff)) {
+          diffPercentage[distribuidora] = formattedPercentageDiff;
+        } else {
+          diffPercentage[distribuidora] = 0;
+        }
       } else {
-        diffPercentage[distribuidora] = null;
+        diffPercentage[distribuidora] = 0;
       }
     });
 
