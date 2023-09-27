@@ -557,22 +557,23 @@ async function calcularValorTotalDeCadaLicencaAno() {
   try {
     const anoAtual = new Date().getFullYear(); // Obtém o ano atual
     const query = `
-      SELECT l.nome, YEAR(h.data) AS ano, h.valor
-      FROM historico_licencas h
-      JOIN (
-          SELECT nome, YEAR(data) AS ano, MAX(data) AS max_data
-          FROM historico_licencas
-          GROUP BY nome, YEAR(data)
-      ) ultima_data
-      ON h.nome = ultima_data.nome AND YEAR(h.data) = ultima_data.ano AND h.data = ultima_data.max_data
-      RIGHT JOIN licencas l
-      ON l.nome = h.nome
-      WHERE YEAR(h.data) < ${anoAtual}
-      
-      UNION
+      SELECT l.nome, strftime('%Y', h.data) AS ano, h.valor
+FROM historico_licencas h
+JOIN (
+    SELECT nome, strftime('%Y', data) AS ano, MAX(data) AS max_data
+    FROM historico_licencas
+    GROUP BY nome, strftime('%Y', data)
+) ultima_data
+ON h.nome = ultima_data.nome AND strftime('%Y', h.data) = ultima_data.ano AND h.data = ultima_data.max_data
+LEFT JOIN licencas l
+ON l.nome = h.nome
+WHERE strftime('%Y', h.data) < ${anoAtual}
 
-      SELECT l.nome, ${anoAtual} AS ano, l.valor
-      FROM licencas l;
+UNION
+
+SELECT l.nome, ${anoAtual} AS ano, l.valor
+FROM licencas l;
+
     `;
 
     const results = await db.query(query, { type: db.QueryTypes.SELECT });

@@ -1,21 +1,18 @@
 const { Sequelize } = require("sequelize");
 
-const db = new Sequelize("pcm", "root", "91188982", {
-  host: "mysql-db",
-  dialect: "mysql",
-  timezone: "-03:00",
+const db = new Sequelize({
+  dialect: 'sqlite',
+  storage: 'database.sqlite', // Nome do arquivo de banco de dados SQLite
 });
 
 // Função para criar o banco de dados
-async function criarBancoDeDados() {
+(async () => {
   try {
-    await db.query("CREATE DATABASE IF NOT EXISTS pcm");
-    console.log("Banco de dados criado com sucesso!");
+    await db.sync(); // Isso criará a tabela 'Usuarios' no banco de dados SQLite
+    console.log('Tabela criada com sucesso!');
   } catch (error) {
-    console.error("Erro ao criar o banco de dados:", error);
+    console.error('Erro ao criar a tabela:', error);
   }
-}
-
-criarBancoDeDados();
+})();
 
 module.exports = db;
